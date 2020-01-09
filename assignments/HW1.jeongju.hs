@@ -149,8 +149,13 @@ sumInts (Node x left right) = sum [x, (sumInts left), (sumInts right)]
 --
 --   >>> preorder t2
 --   [6,2,1,4,3,5,8,7,9]
---   
-preorder = undefined
+--
+-- Take Tree type input and then output an integer list
+preorder :: Tree -> [Int]
+-- If input is only Leaf, then print out an integer list of the Leaf value 
+preorder (Leaf x) = [x]
+-- If input is Node, then use colon (:) to construct new list of left and right leaves by calling function recursively
+preorder (Node x left right) = x : (preorder left) ++ (preorder right) 
 
 
 -- | The list of integers encountered by an in-order traversal of the tree.
