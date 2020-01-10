@@ -1,3 +1,4 @@
+-- Team Member: Youngjoo Lee (leey3@oregonstate.edu), Junhyeok Jeong (jeongju@oregonstate.edu)
 module HW1 where
 
 
@@ -172,7 +173,9 @@ preorder (Node x left right) = x : (preorder left) ++ (preorder right)
 --   >>> inorder t2
 --   [1,2,3,4,5,6,7,8,9]
 --   
-inorder = undefined
+inorder :: Tree -> [Int]
+inorder (Leaf x) = [x]
+inorder (Node x left right) = inorder left ++ [x] ++ inorder right
 
 
 -- | Check whether a binary tree is a binary search tree.
@@ -189,7 +192,8 @@ inorder = undefined
 --   >>> isBST t2
 --   True
 --   
-isBST = undefined
+--isBST :: Tree -> Bool
+--isBST (Leaf x) = True
 
 
 -- | Check whether a number is contained in a binary search tree.
@@ -207,4 +211,6 @@ isBST = undefined
 --   >>> inBST 10 t2
 --   False
 --   
-inBST = undefined
+inBST :: Int -> Tree -> Bool
+inBST x (Leaf y) = x == y
+inBST x (Node y left right) | x == y = true | x > y = inBST x left | x < y = inBST x right
