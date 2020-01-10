@@ -1,4 +1,6 @@
--- Team Member: Youngjoo Lee (leey3@oregonstate.edu), Junhyeok Jeong (jeongju@oregonstate.edu)
+-- Team members
+-- Junhyeok Jeong, jeongju@oregonstate.edu
+-- Youngjoo Lee, leey3@oregonstate.edu
 module HW1 where
 
 
@@ -172,9 +174,12 @@ preorder (Node x left right) = x : (preorder left) ++ (preorder right)
 --
 --   >>> inorder t2
 --   [1,2,3,4,5,6,7,8,9]
---   
+--
+-- Take Tree type input and then output an integer list
 inorder :: Tree -> [Int]
+-- If input is only Leaf, then print out an integer list of the Leaf value
 inorder (Leaf x) = [x]
+-- If input is Node, then call functions recursively for taking inorder (left -> Node -> right)
 inorder (Node x left right) = inorder left ++ [x] ++ inorder right
 
 
@@ -191,9 +196,12 @@ inorder (Node x left right) = inorder left ++ [x] ++ inorder right
 --
 --   >>> isBST t2
 --   True
---   
+--
+-- Take Tree type input and then output an Bool (T or F)   
 isBST :: Tree -> Bool
+-- If input is only Leaf, then print out True
 isBST (Leaf x) = True
+-- If input is Node, then check out the Node value is bigger than left leaf and less than right leaf.  
 isBST (Node x left right) = isBST(left) && isBST(right) && (maxInt(left) <= x && minInt(right) >= x)
 
 -- | Check whether a number is contained in a binary search tree.
@@ -210,7 +218,10 @@ isBST (Node x left right) = isBST(left) && isBST(right) && (maxInt(left) <= x &&
 --
 --   >>> inBST 10 t2
 --   False
---   
+--
+-- Take 2 arguments as an integer and Tree type input and then output an Bool (T or F)   
 inBST :: Int -> Tree -> Bool
+-- If second arg input is only Leaf, then check only Leaf value y with x 
 inBST x (Leaf y) = x == y
+-- If second arg is Node, then check left leaf if first arg x is less than Node value y. Else check right leaf.
 inBST x (Node y left right) | x == y = True | x < y = inBST x left | x > y = inBST x right
