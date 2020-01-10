@@ -192,9 +192,9 @@ inorder (Node x left right) = inorder left ++ [x] ++ inorder right
 --   >>> isBST t2
 --   True
 --   
---isBST :: Tree -> Bool
---isBST (Leaf x) = True
-
+isBST :: Tree -> Bool
+isBST (Leaf x) = True
+isBST (Node x left right) = isBST(left) && isBST(right) && (maxInt(left) <= x && minInt(right) >= x)
 
 -- | Check whether a number is contained in a binary search tree.
 --   (You may assume that the given tree is a binary search tree.)
@@ -213,4 +213,4 @@ inorder (Node x left right) = inorder left ++ [x] ++ inorder right
 --   
 inBST :: Int -> Tree -> Bool
 inBST x (Leaf y) = x == y
-inBST x (Node y left right) | x == y = true | x > y = inBST x left | x < y = inBST x right
+inBST x (Node y left right) | x == y = True | x < y = inBST x left | x > y = inBST x right
