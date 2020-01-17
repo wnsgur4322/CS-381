@@ -41,7 +41,10 @@ ex = Node 4 (Node 3 (leaf 2) End)
 --   >>> encodeList ":-D"
 --   Node ':' End (Node '-' End (Node 'D' End End))
 --
-encodeList = undefined
+
+encodeList :: [x] -> Tree x
+encodeList [] = End
+encodeList (h:t) = Node h End (encodeList t)
 
 
 -- | Map a function over a tree. Applies the given function to every label
