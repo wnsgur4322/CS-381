@@ -65,7 +65,9 @@ encodeList (h:t) = Node h End (encodeList t)
 --   >>> ex == (mapTree (subtract 27) . mapTree (+27)) ex
 --   True
 --
-mapTree = undefined
+mapTree :: (a -> b) -> Tree a -> Tree b
+mapTree _ End = End
+mapTree t (Node a left right) = Node (t a) (mapTree t left) (mapTree t right)
 
 
 -- | Get the value at the node specified by a path. Returns 'Nothing' if
