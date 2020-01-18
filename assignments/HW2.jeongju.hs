@@ -67,7 +67,7 @@ encodeList (h:t) = Node h End (encodeList t)
 --
 mapTree :: (a -> b) -> Tree a -> Tree b
 mapTree _ End = End
-mapTree t (Node a left right) = Node (t a) (mapTree t left) (mapTree t right)
+mapTree x (Node y left right) = Node (x y) (mapTree x left) (mapTree x right)
 
 
 -- | Get the value at the node specified by a path. Returns 'Nothing' if
@@ -88,8 +88,12 @@ mapTree t (Node a left right) = Node (t a) (mapTree t left) (mapTree t right)
 --   >>> valueAt [L,L,L] ex
 --   Nothing
 --
-valueAt = undefined
 
+valueAt :: Path -> Tree a -> Maybe a
+valueAt _ End = Nothing -- meet End, then it prints "Nothing"
+valueAt [] (Node x left right) = Just x -- if consumes all Path, then print x with "Just"
+valueAt (L:t) (Node x left right) = valueAt t left -- Search with left tree
+valueAt (R:t) (Node x left right) = valueAt t right -- Search with right tree
 
 -- | Find a path to a node that contains the given value.
 --
