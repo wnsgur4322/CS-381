@@ -42,8 +42,12 @@ ex = Node 4 (Node 3 (leaf 2) End)
 --   Node ':' End (Node '-' End (Node 'D' End End))
 --
 
+-- input value is a list type, and output is Tree data
 encodeList :: [x] -> Tree x
+-- If the input is empty, then print End
 encodeList [] = End
+-- If the input is not empty, then print h (head) part of node 
+-- and then recall function for rest of the input list
 encodeList (h:t) = Node h End (encodeList t)
 
 
@@ -65,9 +69,13 @@ encodeList (h:t) = Node h End (encodeList t)
 --   >>> ex == (mapTree (subtract 27) . mapTree (+27)) ex
 --   True
 --
-mapTree :: (a -> b) -> Tree a -> Tree b
-mapTree _ End = End
-mapTree x (Node y left right) = Node (x y) (mapTree x left) (mapTree x right)
+-- the input form function Tree and the output is Tree data
+mapTree :: (x -> y) -> Tree x -> Tree y
+-- if the input Tree is End, then print End
+mapTree f End = End
+-- if the input Tree has Node, then apply function on Node x first
+-- and call recursively for Node x's left and right
+mapTree f (Node x left right) = Node (f x) (mapTree f left) (mapTree f right)
 
 
 -- | Get the value at the node specified by a path. Returns 'Nothing' if
@@ -88,12 +96,17 @@ mapTree x (Node y left right) = Node (x y) (mapTree x left) (mapTree x right)
 --   >>> valueAt [L,L,L] ex
 --   Nothing
 --
+-- the input is Path data and the output is Maybe a value in the inputted tree or Nothing
+valueAt :: Path -> Tree x -> Maybe x
+-- if the input Tree is End, then Nothing
+valueAt x End = Nothing
+-- if the input path is root, then print Just root
+valueAt [] (Node x left right) = Just x
+-- if the input path is from left, then call recursively for left leaf of inputted node
+valueAt (L:path) (Node x left right) = valueAt path left
+-- if the input path is from right, then call recursively for right leaf of inputted node
+valueAt (R:path) (Node x left right) = valueAt path right
 
-valueAt :: Path -> Tree a -> Maybe a
-valueAt _ End = Nothing -- meet End, then it prints "Nothing"
-valueAt [] (Node x left right) = Just x -- if consumes all Path, then print x with "Just"
-valueAt (L:t) (Node x left right) = valueAt t left -- Search with left tree
-valueAt (R:t) (Node x left right) = valueAt t right -- Search with right tree
 
 -- | Find a path to a node that contains the given value.
 --
@@ -112,5 +125,18 @@ valueAt (R:t) (Node x left right) = valueAt t right -- Search with right tree
 --   >>> pathTo 10 ex
 --   Nothing
 --
+-- The constraint Eq a => means that the function will work for all trees that contain values that 
+-- can be checked for equality (like integers, characters, and booleans).
+-- The output form is Just Path or Nothing
 pathTo :: Eq a => a -> Tree a -> Maybe Path
-pathTo = undefined
+-- If the input Tree is End, then print Nothing
+pathTo val End = Nothing
+-- If the input Tree is valid, then
+-- 1. If search value (val) is the same as root, then print Just []
+-- 2. otherwise, use case-expression to check left and right side of the Tree node
+pathTo val (Node x left right)
+  | val == x = Just []
+  | otherwise = case (pathTo val left, pathTo val right) of
+      (Just path, y) -> Just (L:path)
+      (y, Just path) -> Just (R:path)
+      y -> Nothing
