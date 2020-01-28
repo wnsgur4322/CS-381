@@ -50,6 +50,11 @@ encodeList [] = End
 -- and then recall function for rest of the input list
 encodeList (h:t) = Node h End (encodeList t)
 
+-- method 2
+-- encodeList = foldir
+-- -> Error (not match type)
+-- encodeList = foldir (|x t -> Node x End t) End
+
 
 -- | Map a function over a tree. Applies the given function to every label
 --   in the tree, preserving the tree's structure.
@@ -140,3 +145,21 @@ pathTo val (Node x left right)
       (Just path, y) -> Just (L:path)
       (y, Just path) -> Just (R:path)
       y -> Nothing
+
+-- method 2
+-- pathTo x End = Nothing
+-- pathTo x (Node y l r)
+--  | x == y = Just []
+--  | otherwise = case pathTo x l of
+--                Just p -> Just (L:p)
+--                Nothing -> case pathTo x r of
+--                  Just p -> Just  (R:p)
+--                  Nothing -> Nothing
+
+-- method 3
+-- pathTo x End = Nothing
+-- pathTo x (Node y l r)
+--  | x == y               = Just []
+--  | Just p <- pathTo x l = Just (L:p)
+--  | Just p <- pathTo x r = Just (R:p)
+-- pathTo _ _              = Nothing
