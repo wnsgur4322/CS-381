@@ -33,7 +33,7 @@ type Num = Int                                 -- (any natural number)
 type Var = String                              -- (any variable name)	
 type Macro = String                            -- (any macro name)	
 
-type Prog = [Commands]                         -- sequence of commands = list of Commands
+type Prog = [Cmd]                         -- sequence of commands = list of Commands
 
 data Mode = Down | Up
             deriving (Show, Eq)                -- pen status
@@ -43,7 +43,7 @@ data Expr = Ref Var                             -- variable reference
             | Expr `Add` Expr
             deriving (Show, Eq)                  -- addition expression
 
-data Commands = Pen Mode                        -- change pen mode
+data Cmd = Pen Mode                        -- change pen mode
             | Move ( Expr , Expr )              -- move pen to a new position
             | Define Macro [Var] Prog           -- define a macro
             | Call Macro [Expr]                 -- invoke a macro
@@ -55,6 +55,8 @@ data Commands = Pen Mode                        -- change pen mode
 --      Second, encode the macro definition as a Haskell value using the data types defined in Task 1.
 -- This corresponds to the abstract syntax of MiniLogo. Your Haskell definition should start with something like line = Define "line" ...
 
+line :: Cmd
+line = undefined
 
 -- 3. Use the line macro you just defined to define a new MiniLogo macro nix (x,y,w,h) that draws a big “X” of width w and height h, starting from position (x,y).
 -- Your definition should not contain any move commands.
