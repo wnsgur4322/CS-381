@@ -55,8 +55,15 @@ data Cmd = Pen Mode                        -- change pen mode
 --      Second, encode the macro definition as a Haskell value using the data types defined in Task 1.
 -- This corresponds to the abstract syntax of MiniLogo. Your Haskell definition should start with something like line = Define "line" ...
 
+-- the concrete syntax
+-- Define line (x1, y1, x2, y2) {     -- takes two points (x1, y1) and (x2, y2) because the 'line' function required to draw a line from point A to point B
+                                      -- all Var x1,y2,x2,y2 are Strings, so put " "
+--    Pen Up, Move (x1, y1)                         -- 1. update Pen status and holding Pen on point A position before draw
+--    Pen Down Move (x2, y2)          -- 2. update Pen status and then move to destination point B.
+-- }
 line :: Cmd
-line = undefined
+line = Define "line" ["x1", "y1", "x2", "y2"]      -- | Define Macro [Var]
+    [Pen Up, Move (Ref "x1", Ref "y1"), Pen Down, Move (Ref "x2", Ref "y2")]
 
 -- 3. Use the line macro you just defined to define a new MiniLogo macro nix (x,y,w,h) that draws a big “X” of width w and height h, starting from position (x,y).
 -- Your definition should not contain any move commands.
