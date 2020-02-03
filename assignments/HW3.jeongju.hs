@@ -63,7 +63,7 @@ data Cmd = Pen Mode                        -- change pen mode
 -- }
 line :: Cmd
 line = Define "line" ["x1", "y1", "x2", "y2"]      -- | Define Macro [Var]
-    [Pen Up, Move (Ref "x1", Ref "y1"), Pen Down, Move (Ref "x2", Ref "y2")]
+    [Pen Up, Move (Ref "x1", Ref "y1"), Pen Down, Move (Ref "x2", Ref "y2")]    -- {Pen Mode, Move (Expr = Ref Var, Expr = Ref Var), Pen Down (Expr = Ref Var, Expr = Ref Var)}
 
 -- 3. Use the line macro you just defined to define a new MiniLogo macro nix (x,y,w,h) that draws a big “X” of width w and height h, starting from position (x,y).
 -- Your definition should not contain any move commands.
