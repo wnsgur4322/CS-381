@@ -283,7 +283,7 @@ product' = foldr (*) 1
 
 -- | Reimplement length using foldr.
 length' :: [a] -> Int
-length' = undefined
+length' = foldr (\_ n -> n + 1) 0
 
 -- | Reimplement allOdd using foldr.
 allOdd' :: [Int] -> Bool
@@ -291,4 +291,4 @@ allOdd' = foldr (\i b -> odd i && b) True
 
 -- | Use foldr to count the True values in a list of Bools.
 countTrues :: [Bool] -> Int
-countTrues = undefined
+countTrues = foldr (\h n -> if h then n +1 else 0)
