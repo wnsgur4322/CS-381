@@ -69,6 +69,10 @@ line = Define "line" ["x1", "y1", "x2", "y2"]      -- | Define Macro [Var]
 -- Your definition should not contain any move commands.
 --      First, write the macro in MiniLogo concrete syntax and include this definition in a comment in your submission.
 --      Second, encode the macro definition as a Haskell value, representing the abstract syntax of the definition.
+nix :: Cmd
+nix = Define "nix" ["x", "y", "w", "h"]
+    [Pen Down, Call "line" [(Ref "x"), (Ref "y"), Add (Ref "x") (Ref "w"), Add (Ref "y") (Ref "h")], 
+    Pen Up, Call "line"  [(Ref "x"), Add (Ref "y") (Ref "h"), Add (Ref "x") (Ref "w"), (Ref "y")]]
 
 -- 4. Define a Haskell function steps :: Int -> Prog that constructs a MiniLogo program that draws a staircase of n steps starting from (0,0).
 -- Below is a visual illustration of what the generated program should draw for a couple different applications of steps. You may assume that n ≥ 0.
