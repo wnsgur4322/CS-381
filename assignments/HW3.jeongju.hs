@@ -119,11 +119,11 @@ pretty :: Prog -> String
 pretty [] = ""
 -- pretty ((Pen md) : leftover) = "Pen " ++ if p == Up then "Up " else if p == Down then "Down " ++ pretty leftover
 pretty ((Pen md) : leftover) = "Pen " ++ (case md of 
-    Up -> "Up "
-    Down -> "Down ") ++ pretty leftover
-pretty ((Move (expr1, expr2) : leftover)) = "Move (" ++ (exprtostring expr1) ++ ", " ++ (exprtostring expr2) ++ ") " ++ pretty leftover
-pretty ((Define mcr var1 prog) : leftover) = "Define " ++ mcr ++ " (" ++ (show var1) ++ ")" ++ "= " ++ pretty prog ++ pretty leftover
-pretty ((Call mcr expr1) : leftover) = "Call " ++ mcr ++ " (" ++ (exprlisttostring expr1) ++ ") " ++ pretty leftover
+    Up -> "Up, "
+    Down -> "Down, ") ++ pretty leftover
+pretty ((Move (expr1, expr2) : leftover)) = "Move (" ++ (exprtostring expr1) ++ ", " ++ (exprtostring expr2) ++ "), " ++ pretty leftover
+pretty ((Define mcr var1 prog) : leftover) = "Define " ++ mcr ++ " (" ++ (show var1) ++ ")" ++ "= " ++ pretty prog ++ ", " ++ pretty leftover
+pretty ((Call mcr expr1) : leftover) = "Call " ++ mcr ++ " (" ++ (exprlisttostring expr1) ++ "), " ++ pretty leftover
 
 exprtostring :: Expr -> String
 exprtostring (Ref r) = r
