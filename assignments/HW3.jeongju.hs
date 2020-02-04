@@ -74,6 +74,7 @@ line = Define "line" ["x1", "y1", "x2", "y2"]      -- | Define Macro [Var]
 -- Big "X" of width w and height h from position (x,y)
 -- then          (x, y+h)\/ (x+w, y+h)
 --    start point (x,y)  /\ (x+w, y)
+
 -- the concrete syntax
 -- Define nix (x, y, w, h) {        -- express (Define Macro [Var]) part of data Cmd
 --      line(x, y, x + w, y + h),   -- 1. first line part by calling line function with 2 points ((x, y) -> (x+w, y+h))
@@ -114,6 +115,25 @@ macros ((Call mcr expr1) : leftover) = macros leftover
 -- That is, it transforms the abstract syntax (a Haskell value) into nicely formatted concrete syntax (a string of characters).
 -- Your pretty-printed program should look similar to the example programs given above; however, for simplicity you will probably want to print just one command per line.
 -- In GHCi, you can render a string with newlines by applying the function putStrLn. So, to pretty-print a program p use: putStrLn (pretty p).
+pretty :: Prog -> String
+pretty [] = ""
+-- pretty ((Pen md) : leftover) = "Pen " ++ if p == Up then "Up " else if p == Down then "Down " ++ pretty leftover
+pretty ((Pen md) : leftover) = "Pen " ++ (case md of 
+    Up -> "Up "
+    Down -> "Down ") ++ pretty leftover
+pretty ((Move (expr1, expr2) : leftover)) = "Move (" ++ (exprtostring expr1) ++ ", " ++ (exprtostring expr2) ++ ") " ++ pretty leftover
+pretty ((Define mcr var1 prog) : leftover) = "Define " ++ mcr ++ " (" ++ (show var1) ++ ")" ++ "= " ++ pretty prog ++ pretty leftover
+pretty ((Call mcr expr1) : leftover) = "Call " ++ mcr ++ " (" ++ (exprlisttostring expr1) ++ ") " ++ pretty leftover
+
+exprtostring :: Expr -> String
+exprtostring (Ref r) = r
+exprtostring (Num n) = show n
+exprtostring (a `Add` b) = (exprtostring a) ++ " `Add` " ++ (exprtostring b)
+
+exprlisttostring :: [Expr] -> String
+exprlisttostring [] = ""
+exprlisttostring (x:xs) = if xs == [] then  exprtostring x ++ "" ++ exprlisttostring xs
+                            else exprtostring x ++ ", " ++ exprlisttostring xs
 
 -- Bonus Problems
 -- These problems are not any harder than the other problems in the assignment.
