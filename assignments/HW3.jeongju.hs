@@ -125,11 +125,13 @@ pretty ((Move (expr1, expr2) : leftover)) = "Move (" ++ (exprtostring expr1) ++ 
 pretty ((Define mcr var1 prog) : leftover) = "Define " ++ mcr ++ " (" ++ (show var1) ++ ")" ++ "= " ++ pretty prog ++ ", " ++ pretty leftover
 pretty ((Call mcr expr1) : leftover) = "Call " ++ mcr ++ " (" ++ (exprlisttostring expr1) ++ "), " ++ pretty leftover
 
+-- It's for transforming Expr into String for pretty.
 exprtostring :: Expr -> String
 exprtostring (Ref r) = r
 exprtostring (Num n) = show n
 exprtostring (a `Add` b) = (exprtostring a) ++ " `Add` " ++ (exprtostring b)
 
+-- It's for transforming Expr list into String for pretty.
 exprlisttostring :: [Expr] -> String
 exprlisttostring [] = ""
 exprlisttostring (x:xs) = if xs == [] then  exprtostring x ++ "" ++ exprlisttostring xs
@@ -145,7 +147,7 @@ exprlisttostring (x:xs) = if xs == [] then  exprtostring x ++ "" ++ exprlisttost
 optE :: Expr -> Expr
 optE (Ref r) = Ref r
 optE (Num n) = Num n
-optE ((Num x) `Add` (Num y)) = Num (x + y)
+optE ((Num x) `Add` (Num y)) = Num (x + y) -- When it's Num + Num, make two Nums into one added Num.
 optE (x `Add` y) = (optE x) `Add` (optE y)
 
 -- 8.Define a Haskell function optP :: Prog -> Prog that optimizes all of the expressions contained in a given program using optE.
