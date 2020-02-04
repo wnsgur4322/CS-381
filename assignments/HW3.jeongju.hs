@@ -98,14 +98,17 @@ steps 0 = []
 steps 1 = [Call "line" [Num 0, Num 0, Num 0, Num 1 ], Call "line" [Num 0, Num 1, Num 1, Num 1]]
 steps n = [Call "line" [Num n, Num n, Num n, Num n `Add` Num 1], Call "line" [Num n, Num n `Add` Num 1, Num n `Add` Num 1, Num n `Add` Num 1]] ++ steps (n-1)
 
-
 -- 5. Define a Haskell function macros :: Prog -> [Macro] that returns a list of the names of all of the macros that are defined anywhere in a given MiniLogo program.
 -- Don’t worry about duplicates—if a macro is defined more than once, the resulting list may include multiple copies of its name.
 
 -- the concrete syntax
---
+-- ************* will wirte later *******************
 macros :: Prog -> [Macro]
 macros [] = []
+macros ((Pen md) : leftover) = macros leftover
+macros ((Move (expr1, expr2) : leftover)) = macros leftover
+macros ((Define mcr var1 prog) : leftover) = mcr : macros leftover
+macros ((Call mcr expr1) : leftover) = macros leftover
 
 -- 6. Define a Haskell function pretty :: Prog -> String that pretty-prints a MiniLogo program.
 -- That is, it transforms the abstract syntax (a Haskell value) into nicely formatted concrete syntax (a string of characters).
