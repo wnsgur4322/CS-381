@@ -142,5 +142,11 @@ exprlisttostring (x:xs) = if xs == [] then  exprtostring x ++ "" ++ exprlisttost
 
 -- 7. Define a Haskell function optE :: Expr -> Expr that partially evaluates expressions by replacing any additions of literals with the result. 
 -- For example, given the expression (2+3)+x, optE should return the expression 5+x.
+optE :: Expr -> Expr
+optE (Ref r) = Ref r
+optE (Num n) = Num n
+optE ((Num x) `Add` (Num y)) = Num (x + y)
+optE (x `Add` y) = (optE x) `Add` (optE y)
 
 -- 8.Define a Haskell function optP :: Prog -> Prog that optimizes all of the expressions contained in a given program using optE.
+optP :: Prog -> Prog
