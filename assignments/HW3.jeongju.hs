@@ -117,12 +117,12 @@ macros ((Call mcr expr1) : leftover) = macros leftover
 -- In GHCi, you can render a string with newlines by applying the function putStrLn. So, to pretty-print a program p use: putStrLn (pretty p).
 pretty :: Prog -> String -- With explisttostring and exprtostring, Transforming Prog into String.
 pretty [] = ""
-pretty ((Pen md) : leftover) = "Pen " ++ (case md of  -- depends on Up or Down, it changes to string
-    Up -> "Up, "
-    Down -> "Down, ") ++ pretty leftover              -- we're not sure how to use interspace and intercalate, so we added commas in the implementation of pretty.
-pretty ((Move (expr1, expr2) : leftover)) = "Move (" ++ (exprtostring expr1) ++ ", " ++ (exprtostring expr2) ++ "), " ++ pretty leftover
-pretty ((Define mcr var1 prog) : leftover) = "Define " ++ mcr ++ " (" ++ (show var1) ++ ")" ++ "= " ++ pretty prog ++ ", " ++ pretty leftover -- use show to print Int value as a string.
-pretty ((Call mcr expr1) : leftover) = "Call " ++ mcr ++ " (" ++ (exprlisttostring expr1) ++ "), " ++ pretty leftover -- expr1 in Call is list of Expr, so use exprlisttostring to transforming [Expr] to string.
+pretty ((Pen md) : leftover) = " Pen " ++ (case md of  -- depends on Up or Down, it changes to string
+    Up -> "Up;"
+    Down -> "Down;") ++ pretty leftover              -- we're not sure how to use interspace and intercalate, so we added commas in the implementation of pretty.
+pretty ((Move (expr1, expr2) : leftover)) = " Move (" ++ (exprtostring expr1) ++ ", " ++ (exprtostring expr2) ++ ");" ++ pretty leftover
+pretty ((Define mcr var1 prog) : leftover) = " Define " ++ mcr ++ " (" ++ (show var1) ++ ")" ++ " { " ++ pretty prog ++ " }" ++ pretty leftover -- use show to print Int value as a string.
+pretty ((Call mcr expr1) : leftover) = " Call " ++ mcr ++ " (" ++ (exprlisttostring expr1) ++ ");" ++ pretty leftover -- expr1 in Call is list of Expr, so use exprlisttostring to transforming [Expr] to string.
 
 -- It's for transforming Expr into String for pretty.
 exprtostring :: Expr -> String
