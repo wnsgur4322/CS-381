@@ -115,27 +115,26 @@ macros ((Call mcr expr1) : leftover) = macros leftover
 -- That is, it transforms the abstract syntax (a Haskell value) into nicely formatted concrete syntax (a string of characters).
 -- Your pretty-printed program should look similar to the example programs given above; however, for simplicity you will probably want to print just one command per line.
 -- In GHCi, you can render a string with newlines by applying the function putStrLn. So, to pretty-print a program p use: putStrLn (pretty p).
-pretty :: Prog -> String
+pretty :: Prog -> String -- With explisttostring and exprtostring, Transforming Prog into String.
 pretty [] = ""
--- pretty ((Pen md) : leftover) = "Pen " ++ if p == Up then "Up " else if p == Down then "Down " ++ pretty leftover
-pretty ((Pen md) : leftover) = "Pen " ++ (case md of 
+pretty ((Pen md) : leftover) = "Pen " ++ (case md of  -- depends on Up or Down, it changes to string
     Up -> "Up, "
-    Down -> "Down, ") ++ pretty leftover
+    Down -> "Down, ") ++ pretty leftover              -- we're not sure how to use interspace and intercalate, so we added commas in the implementation of pretty.
 pretty ((Move (expr1, expr2) : leftover)) = "Move (" ++ (exprtostring expr1) ++ ", " ++ (exprtostring expr2) ++ "), " ++ pretty leftover
-pretty ((Define mcr var1 prog) : leftover) = "Define " ++ mcr ++ " (" ++ (show var1) ++ ")" ++ "= " ++ pretty prog ++ ", " ++ pretty leftover
-pretty ((Call mcr expr1) : leftover) = "Call " ++ mcr ++ " (" ++ (exprlisttostring expr1) ++ "), " ++ pretty leftover
+pretty ((Define mcr var1 prog) : leftover) = "Define " ++ mcr ++ " (" ++ (show var1) ++ ")" ++ "= " ++ pretty prog ++ ", " ++ pretty leftover -- use show to print Int value as a string.
+pretty ((Call mcr expr1) : leftover) = "Call " ++ mcr ++ " (" ++ (exprlisttostring expr1) ++ "), " ++ pretty leftover -- expr1 in Call is list of Expr, so use exprlisttostring to transforming [Expr] to string.
 
 -- It's for transforming Expr into String for pretty.
 exprtostring :: Expr -> String
 exprtostring (Ref r) = r
-exprtostring (Num n) = show n
+exprtostring (Num n) = show n                                                   -- use show to print Num n as a string
 exprtostring (a `Add` b) = (exprtostring a) ++ " `Add` " ++ (exprtostring b)
 
 -- It's for transforming Expr list into String for pretty.
 exprlisttostring :: [Expr] -> String
 exprlisttostring [] = ""
-exprlisttostring (x:xs) = if xs == [] then  exprtostring x ++ "" ++ exprlisttostring xs
-                            else exprtostring x ++ ", " ++ exprlisttostring xs
+exprlisttostring (x:xs) = if xs == [] then  exprtostring x ++ "" ++ exprlisttostring xs -- if there is no more variables in the list, then it just added last variables without ','
+                            else exprtostring x ++ ", " ++ exprlisttostring xs          -- otherwise, to make it clear to see, add ',' as a word separator.
 
 -- Bonus Problems
 -- These problems are not any harder than the other problems in the assignment.
@@ -148,7 +147,16 @@ optE :: Expr -> Expr
 optE (Ref r) = Ref r
 optE (Num n) = Num n
 optE ((Num x) `Add` (Num y)) = Num (x + y) -- When it's Num + Num, make two Nums into one added Num.
-optE (x `Add` y) = (optE x) `Add` (optE y)
+optE (x `Add` y) = (optE x) `Add` (optE y) -- Otherwise, it just return values with `Add` because string (or other type) + Int is impossible.
 
 -- 8.Define a Haskell function optP :: Prog -> Prog that optimizes all of the expressions contained in a given program using optE.
 optP :: Prog -> Prog
+optP [] = []                    -- Empty list = Empty list
+optP (x:xs) = optC x : optP xs  -- With optC, recursivly, continueing optP with all Cmd in Prog list 
+
+-- It helps optP function through re-defined and evaluating expressions by replacing any additions of literals through optE
+optC :: Cmd -> Cmd
+optC (Pen md) = Pen md
+optC (Move (expr1, expr2)) = Move ((optE expr1), (optE expr2)) -- working with optE to replace any additions of literals
+optC (Define mcr var1 prog) = Define mcr var1 (optP prog)      -- There is prog in define, so do optP for this prog.
+optC (Call mcr expr1) =  Call mcr (map optE expr1)             -- Call has [expr], so use map to make expr to list of expr.
