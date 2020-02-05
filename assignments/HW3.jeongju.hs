@@ -128,7 +128,7 @@ pretty ((Call mcr expr1) : leftover) = "Call " ++ mcr ++ " (" ++ (exprlisttostri
 exprtostring :: Expr -> String
 exprtostring (Ref r) = r
 exprtostring (Num n) = show n                                                   -- use show to print Num n as a string
-exprtostring (a `Add` b) = (exprtostring a) ++ " `Add` " ++ (exprtostring b)
+exprtostring (a `Add` b) = (exprtostring a) ++ " + " ++ (exprtostring b)
 
 -- It's for transforming Expr list into String for pretty.
 exprlisttostring :: [Expr] -> String
