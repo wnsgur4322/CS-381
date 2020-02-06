@@ -62,7 +62,7 @@ data Cmd = Pen Mode                        -- change pen mode
 --    Pen Down Move (x2, y2)          -- 2. update Pen status and then move to destination point B.
 -- }
 line :: Cmd
-line = Define "line" ["x1", "y1", "x2", "y2"]      -- | Define Macro [Var]
+line = Define "line" ["x1", "y1", "x2", "y2"]      -- Define Macro [Var]
     [Pen Up, Move (Ref "x1", Ref "y1"), Pen Down, Move (Ref "x2", Ref "y2")]    -- {Pen Mode, Move (Expr = Ref Var, Expr = Ref Var), Pen Down (Expr = Ref Var, Expr = Ref Var)}
 
 -- 3. Use the line macro you just defined to define a new MiniLogo macro nix (x,y,w,h) that draws a big “X” of width w and height h, starting from position (x,y).
@@ -102,14 +102,21 @@ steps n = [Call "line" [Num n, Num n, Num n, Num n `Add` Num 1], Call "line" [Nu
 -- 5. Define a Haskell function macros :: Prog -> [Macro] that returns a list of the names of all of the macros that are defined anywhere in a given MiniLogo program.
 -- Don’t worry about duplicates—if a macro is defined more than once, the resulting list may include multiple copies of its name.
 
--- the concrete syntax
--- ************* will wirte later *******************
+ex1= [nix,nix]
+-- | question 5 doctest
+--   >>> macros []
+--   []
+--   >>> macros [nix,line]
+--   ["nix","line"]
+--   >>> macros ex1
+--   ["nix","nix"]
+
 macros :: Prog -> [Macro]
-macros [] = []
-macros ((Pen md) : leftover) = macros leftover
-macros ((Move (expr1, expr2) : leftover)) = macros leftover
-macros ((Define mcr var1 prog) : leftover) = mcr : macros leftover
-macros ((Call mcr expr1) : leftover) = macros leftover
+macros [] = []                                                      -- Base case for empty input
+macros ((Pen md) : leftover) = macros leftover                      -- if input is Pen of Cmd, then go to macros leftover
+macros ((Move (expr1, expr2) : leftover)) = macros leftover         -- if input is Move with two expressions, then go to macros leftover 
+macros ((Define mcr var1 prog) : leftover) = mcr : macros leftover  -- if input is Define with new macro, variable, and [Cmd], then concise the defining function with macro leftover
+macros ((Call mcr expr1) : leftover) = macros leftover              -- if input is Call with old macro and expression, then go to macros leftover
 
 -- 6. Define a Haskell function pretty :: Prog -> String that pretty-prints a MiniLogo program.
 -- That is, it transforms the abstract syntax (a Haskell value) into nicely formatted concrete syntax (a string of characters).
