@@ -49,10 +49,11 @@ draw p = let (_,ls) = prog p start in toHTML ls
 --   >>> cmd (Move 4 5) (Down,(2,3))
 --   ((Down,(4,5)),Just ((2,3),(4,5)))
 --
-cmd :: Cmd -> State -> (State, Maybe Line)
-cmd (Pen m) (mode, p) = ((m, p), Nothing)
-cmd (Move x y) (Up, _) = ((Up, (x, y)), Nothing)
-cmd (Move x1 y1) (Down, (x2, y2)) = ((Down, (x1, y1)), Just ((x2, y2), (x1, y1)))
+cmd :: Cmd -> State -> (State, Maybe Line)                                          -- cmd takes 'Cmd' and 'State' data defined from MiniMiniLogo.hs
+cmd (Pen Up) (mode, point) = ((Up, point), Nothing)                                 -- if takes 'Pen Up', then Keeps 'Up' and the point and output 'Nothing'
+cmd (Pen Down) (mode, point) = ((Down, point), Nothing)                             -- if takes 'Pen Down', then Keeps 'Down' and the point and output 'Nothing'
+cmd (Move x y) (Up, _) = ((Up, (x, y)), Nothing)                                    -- if takes 'Move', point, and 'Up' pen's mode, then doesn't draw line (just move pen to another) 
+cmd (Move x1 y1) (Down, (x2, y2)) = ((Down, (x1, y1)), Just ((x2, y2), (x1, y1)))   -- if takes 'Move', point, and 'Down' pen's mode, then draw line old point to new point.
 
 -- | Semantic function for Prog.
 --
@@ -61,12 +62,14 @@ cmd (Move x1 y1) (Down, (x2, y2)) = ((Down, (x1, y1)), Just ((x2, y2), (x1, y1))
 --
 --   >>> prog (steps 2 0 0) start
 --   ((Down,(2,2)),[((0,0),(0,1)),((0,1),(1,1)),((1,1),(1,2)),((1,2),(2,2))])
-prog :: Prog -> State -> (State, [Line])
-prog p s = linelist p (s, []) 
+--
+prog :: Prog -> State -> (State, [Line])                                            -- prog takes Prog which is list of Cmd and State which is mode and point. 
+prog [] s = (s, [])                                                                 -- if input cmd list (Prog) is empty, then nothing will be happened because there is no 'Cmd'
+prog p s = linelist p (s, [])                                                       -- if dinput is not empty, then call linelist to append new line in the existed list of lines.
 
 
-linelist :: Prog -> (State, [Line]) -> (State, [Line])
-linelist [] n = n
+linelist :: Prog -> (State, [Line]) -> (State, [Line])                              -- linelist is for appending new line into existed line list
+linelist [] n = n                                                                   -- if existed list was empty, then create list of lines with input value
 linelist (x:xs) (s, list) = case cmd x s of
     (st, Nothing) -> linelist xs (st, list)
     (st, Just line) ->  linelist xs (st, list ++ [line])
@@ -79,4 +82,4 @@ linelist (x:xs) (s, list) = case cmd x s of
 -- | This should be a MiniMiniLogo program that draws an amazing picture.
 --   Add as many helper functions as you want.
 amazing :: Prog
-amazing = undefined
+amazing = box 7 3 ++ nix 6 6 4 3 ++ steps 3 20 20
