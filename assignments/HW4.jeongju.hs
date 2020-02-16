@@ -1,3 +1,6 @@
+-- Team members
+-- Junhyeok Jeong, jeongju@oregonstate.edu
+-- Youngjoo Lee, leey3@oregonstate.edu
 module HW4 where
 
 import MiniMiniLogo
