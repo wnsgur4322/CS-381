@@ -127,5 +127,5 @@ prog (c:p) = \s -> case cmd c s of
 --   >>> run [PushN 3, Add, PushN 4]
 --   Nothing
 --
--- run :: Prog -> Maybe Stack
--- run p = prog p []
+run :: Prog -> Maybe Stack
+run p = prog p []
