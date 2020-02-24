@@ -11,7 +11,7 @@
 ### Homework 1 - Full score
 ### Homework 2 - Full score
 ### Homework 3 - Full score + 1 extra credit
-### Homework 4 -
+### Homework 4 - Full score + 3 extra credit
 
 ## Project: A programming language interpreter
 
