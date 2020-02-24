@@ -139,15 +139,31 @@ ex5 = or (not true) (and (Equ (Lit 3) (neg (Lit 3))) (or true false))
 
 -- 1. Define the syntax of types
 
+data Type = TBool | TInt | TError
+  deriving (Eq,Show)
 
 -- 2. Define the typing relation.
 
-typeOf = undefined
+typeOf :: Exp -> Type
+typeOf (Lit i) = TInt
+typeOf (Add l r) = case (typeOf l, typeOf r) of
+                        (TInt, TInt) -> TInt
+                        _ -> TError
+typeOf (Mul l r) = case (typeOf l, typeOf r) of
+                        (TInt, TInt) -> TInt
+                        _ -> TError
+typeOf (Equ l r) = case (typeOf l, typeOf r) of
+                        (TInt, TInt) -> TBool
+                        (TBool, TBool) -> TBool
+                        _ -> TError
+typeOf (If c t e) = case (typeOf c, typeOf t, typeOf e) of
+                        (TBool, tt, te) -> if tt == te then tt else TError
+                        _ -> TError
 
 
 -- 3. Define the semantics of type-correct programs.
-
-sem' = undefined
+sem' :: Exp -> Either Int Bool
+sem' = 
 
 
 -- 4. Define our interpreter.
