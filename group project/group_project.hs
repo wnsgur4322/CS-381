@@ -27,6 +27,7 @@ import Prelude hiding (Num)
 --   prog ::= cmd*
 --    cmd ::= num                         push a number on the stack
 --         |  bool                        push a boolean on the stack
+--         |  String                      push a string on the stack
 --         |  `add`                       add the top two numbers on the stack
 --         |  `mul`                       multiply the top two numbers on the stack
 --         |  `equ`                       check whether the top two elements are equal
@@ -39,6 +40,7 @@ type Prog = [Cmd]
 
 data Cmd = PushN Int
          | PushB Bool
+         | PushS String
          | Add
          | Mul
          | Equ
@@ -97,9 +99,13 @@ genSum (x:xs) = genSum xs ++ [PushN x, Add]
 --      * stack
 --        * int
 --        * bool
+--        * String
 --      * error
+data EitherThree a  b  c = Left   a 
+                         | Middle b     
+                         | Right  c
 
-type Stack = [Either Int Bool]
+type Stack = [EitherThree Int String Bool]
 
 type Domain = Stack -> Maybe Stack
 
@@ -110,12 +116,14 @@ cmd (PushN i)    = \s -> Just (Left i : s)
 cmd (PushB b)    = \s -> Just (Right b : s)
 cmd Add          = \s -> case s of
                            (Left i : Left j : s') -> Just (Left (i+j) : s')
+                           (Middle x : Middel y : s') -> Just (Middle (x++y) : s')
                            _ -> Nothing
 cmd Mul          = \s -> case s of
                            (Left i : Left j : s') -> Just (Left (i*j) : s')
                            _ -> Nothing
 cmd Equ          = \s -> case s of
                            (Left i  : Left j  : s') -> Just (Right (i == j) : s')
+                           (Middle x : Middle y : s') -> Just (Right (x == y) : s')
                            (Right a : Right b : s') -> Just (Right (a == b) : s')
                            _ -> Nothing
 cmd (IfElse t e) = \s -> case s of
@@ -147,18 +155,31 @@ run :: Prog -> Maybe Stack
 run p = prog p []
 
 
-{- 2. Conditionals.
-    You should provide some way to branch in your language (e.g. if-then-else).
-3. Recursion/loops. 
-    You should provide some way to loop in your language, either through an explicit looping construct (e.g. while) or through recursive functions.
-4. Variables/local names (imperative/functional languages only).
-    You should provide a way to give names to values in your language. 
-    This might be mutable variables in an imperative language, or immutable local variables in a functional language.
-5. Procedures/functions with arguments (or some other abstraction mechanism).
-    You should provide a way to factor out repeated code and give it a name so that it can be reused. 
-    For imperative/functional languages, you must decide what kind of parameter passing scheme to use, which we’ll discuss in class. (Passing arguments is trivial for stack-based languages since arguments are passed on the stack!).
-6. Stack manipulation operations (stack-based languages only). 
-    You should provide a set of basic operations for manipulating values on the stack. You may want to look at a set of Forth stack maneuvers for inspiration. -}
+-- 2. Conditionals.
+--    You should provide some way to branch in your language (e.g. if-then-else).
+conditions :: Prog -> Domain
+conditions = undefined
+-- Conditions with comparing two strings
+
+-- Conditions with int
+
+-- conditions with T/F
+
+
+
+-- 3. Recursion/loops. 
+--    You should provide some way to loop in your language, either through an explicit looping construct (e.g. while) or through recursive functions.
+loops :: Prog -> Domain
+loops = undefined
+
+
+-- 4. Procedures/functions with arguments (or some other abstraction mechanism).
+--    You should provide a way to factor out repeated code and give it a name so that it can be reused. 
+--    For imperative/functional languages, you must decide what kind of parameter passing scheme to use, which we’ll discuss in class. (Passing arguments is trivial for stack-based languages since arguments are passed on the stack!).
+
+
+-- 5. Stack manipulation operations (stack-based languages only). 
+--    You should provide a set of basic operations for manipulating values on the stack. You may want to look at a set of Forth stack maneuvers for inspiration. -}
 
 {-Additionally, you must include at least 3 points worth of the following features. The point value of each feature is indicated in parentheses after the feature name.
 1. Strings and operations (1).
