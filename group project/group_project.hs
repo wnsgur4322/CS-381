@@ -11,8 +11,6 @@ When designing your language, you must include some version of all of the follow
     You should provide at least boolean values and integers; you may want to include floating point numbers as well.
     You will need a way to represent both literal values and operations on these types. -}
 
-module StackLang where
-
 import Prelude hiding (Num)
 
 
@@ -34,7 +32,7 @@ import Prelude hiding (Num)
 --         |  `if` prog `else` prog `end` if the value on the top is true
 --                                        then run the first program, else run the second
 
--- 1. Encode the above grammar as a set of Haskell data types
+-- Encode the above grammar as a set of Haskell data types
 
 type Prog = [Cmd]
 
@@ -58,18 +56,18 @@ data Cmd = PushN Int
          | PushB Bool
          | PushS String
          | PushV Var 
-         | Add
-         | Minus
-         | Mul
-         | Equ
-         | Larger
-         | Smaller
+         | Add Value Value
+         | Minus Value Value
+         | Mul Value Value
+         | Equ Value Value
+         | Larger Value Value
+         | Smaller Value Value
          | IfElse Prog Prog
          | Loop Prog Prog
   deriving (Eq,Show)
 
 
--- 2. Write the following StackLang program as a Haskell value:
+-- Write the following StackLang program as a Haskell value:
 --
 --   3 4 add 5 equ
 --
@@ -78,7 +76,7 @@ ex1 = [PushN 3, PushN 4, Add, PushN 5, Equ]
 
 
 
--- 3. Write a StackLang program that:
+-- Write a StackLang program that:
 --     * checks whether 3 and 4 are equal
 --     * if so, returns the result of adding 5 and 6
 --     * if not, returns the value false
@@ -90,7 +88,7 @@ ex2 :: Prog
 ex2 = [PushN 3, PushN 4, Equ, IfElse [PushN 5, PushN 6, Add] [PushB False]]
 
 
--- 4. Write a Haskell function that takes two arguments x and y
+-- Write a Haskell function that takes two arguments x and y
 --    and generates a StackLang program that adds both x and y to
 --    the number on the top of the stack
 genAdd2 :: Int -> Int -> Prog
@@ -99,7 +97,7 @@ genAdd2 x y = [PushN x, PushN y, Add, Add]
            -- [PushN (x+y), Add]  -- doing as much as possible at the metalanguage level
 
 
--- 5. Write a Haskell function that takes a list of integers and
+-- Write a Haskell function that takes a list of integers and
 --    generates a StackLang program that sums them all up.
 genSum :: [Int] -> Prog
 genSum []     = [PushN 0]
@@ -114,7 +112,7 @@ genSum (x:xs) = genSum xs ++ [PushN x, Add]
 --
 
 
--- 6. Identify/define a semantics domain for Cmd and for Prog.
+-- Identify/define a semantics domain for Cmd and for Prog.
 --
 --    Things we need:
 --      * stack
@@ -132,13 +130,13 @@ type Stack = [EitherFour Int String Bool Var]
 type Domain = Stack -> Maybe Stack
 
 
--- 7. Define the semantics of a StackLang command (ignore If at first).
+-- Define the semantics of a StackLang command (ignore If at first).
 cmd :: Cmd -> Domain
 cmd (PushN i)    = \s -> Just (Left i : s)
 cmd (PushB b)    = \s -> Just (Right b : s)
 cmd (PushS str)  = \s -> Just (Middle str : s)
-cmd (PushV (n val))    = \s -> Just ((Four n (cmd val)) : s)
-cmd Add          = \s -> case s of
+cmd (PushV val)    = \s -> Just ((Four val : s)
+cmd Add l r         = \s -> case s of
                            (Left i : Left j : s') -> Just (Left (i+j) : s')
                            (Middle x : Middel y : s') -> Just (Middle (x++y) : s')
                            (Four (n (Left i)) : Left j : s') -> Just (Four (n (Left (i+j))) : s')
@@ -146,12 +144,12 @@ cmd Add          = \s -> case s of
                            (Four (n (Middle i)) : Middle j : s') -> Just (Four (n (Middle (i++j))) : s')
                            (Four (n (Middle i)) : Four (u (Middle j)) : s') -> Just (Four (n (Middle (i++j))) : Four (u (Middle j)) : s')
                            _ -> Nothing
-cmd Mul          = \s -> case s of
+cmd Mul l r          = \s -> case s of
                            (Left i : Left j : s') -> Just (Left (i*j) : s')
                            (Four (n (Left i)) : Left j : s') -> Just (Four (n (Left (i*j))) : s' )
                            (Four (n (Left i)) : Four (u (Left j)) : s') -> Just (Four (n (Left (i*j))) : Four (u (Left j)) : s')
                            _ -> Nothing
-cmd Equ          = \s -> case s of
+cmd Equ l r         = \s -> case s of
                            (Left i  : Left j  : s') -> Just (Right (i == j) : s')
                            (Middle x : Middle y : s') -> Just (Right (x == y) : s')
                            (Right a : Right b : s') -> Just (Right (a == b) : s')              
@@ -162,12 +160,12 @@ cmd Equ          = \s -> case s of
                            (Four (n (Right i)) : Right j : s') -> Just (Four (n (Right i)) : Right(i == j) : s')
                            (Four (n (Right i)) : Four (u (Right j)) : s') -> Just (Four (n (Right i)) : Four (u (Right j)) : Right(i == j) : s')
                            _ -> Nothing
-cmd Larger       = \s -> case s of
+cmd Larger l r      = \s -> case s of
                            (Left i  : Left j  : s') -> Just (Right (i > j) : s')
                            (Four (n (Left i)) : Left j : s') -> Just (Four (n (Left i)) : Right(i > j) : s')
                            (Four (n (Left i)) : Four (u (Left j)) : s') -> Just (Four (n (Left i)) : Four (u (Left j)) : Right(i > j) : s')
                            _ -> Nothing
-cmd Smaller      = \s -> case s of
+cmd Smaller l r     = \s -> case s of
                            (Left i  : Left j  : s') -> Just (Right (i < j) : s')
                            (Four (n (Left i)) : Left j : s') -> Just (Four (n (Left i)) : Right(i < j) : s')
                            (Four (n (Left i)) : Four (u (Left j)) : s') -> Just (Four (n (Left i)) : Four (u (Left j)) : Right(i < j) : s')                           

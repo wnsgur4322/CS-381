@@ -163,8 +163,12 @@ typeOf (If c t e) = case (typeOf c, typeOf t, typeOf e) of
 
 -- 3. Define the semantics of type-correct programs.
 sem' :: Exp -> Either Int Bool
-sem' = 
+sem' (Lit i) = Left i
+sem' (Add l r) = Left (evalInt l + evalInt r)
+sem' (Mul l r) = Left (evalInt l * evalInt r)
+sem' (Equ l r) = Right (evalInt l == evalInt r)
 
 
 -- 4. Define our interpreter.
+eval :: Exp -> Value
 eval = undefined
