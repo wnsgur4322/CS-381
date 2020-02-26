@@ -38,13 +38,34 @@ import Prelude hiding (Num)
 
 type Prog = [Cmd]
 
+type Varname = String
+
+{-
+data Value = IntV Int 
+          | StringV String
+          | BoolV Bool
+          | ValueError
+          deriving (Eq, Show)
+-}
+data Value = PushN Int 
+          | PushB Bool
+          | PushS String
+          | ValueError
+          deriving (Eq, Show)
+
+type Var = (Varname Value)
 data Cmd = PushN Int
          | PushB Bool
          | PushS String
+         | PushV Var 
          | Add
+         | Minus
          | Mul
          | Equ
+         | Larger
+         | Smaller
          | IfElse Prog Prog
+         | Loop Prog Prog
   deriving (Eq,Show)
 
 
@@ -101,11 +122,12 @@ genSum (x:xs) = genSum xs ++ [PushN x, Add]
 --        * bool
 --        * String
 --      * error
-data EitherThree a  b  c = Left   a 
-                         | Middle b     
-                         | Right  c
+data EitherFour a b c d = Left   a 
+                        | Middle b     
+                        | Right  c
+                        | Four d
 
-type Stack = [EitherThree Int String Bool]
+type Stack = [EitherFour Int String Bool Var]
 
 type Domain = Stack -> Maybe Stack
 
@@ -114,23 +136,59 @@ type Domain = Stack -> Maybe Stack
 cmd :: Cmd -> Domain
 cmd (PushN i)    = \s -> Just (Left i : s)
 cmd (PushB b)    = \s -> Just (Right b : s)
+cmd (PushS str)  = \s -> Just (Middle str : s)
+cmd (PushV (n val))    = \s -> Just ((Four n (cmd val)) : s)
 cmd Add          = \s -> case s of
                            (Left i : Left j : s') -> Just (Left (i+j) : s')
                            (Middle x : Middel y : s') -> Just (Middle (x++y) : s')
+                           (Four (n (Left i)) : Left j : s') -> Just (Four (n (Left (i+j))) : s')
+                           (Four (n (Left i)) : Four (u (Left j)) : s') -> Just (Four (n (Left (i+j))) : Four (u (Left j)) : s')
+                           (Four (n (Middle i)) : Middle j : s') -> Just (Four (n (Middle (i++j))) : s')
+                           (Four (n (Middle i)) : Four (u (Middle j)) : s') -> Just (Four (n (Middle (i++j))) : Four (u (Middle j)) : s')
                            _ -> Nothing
 cmd Mul          = \s -> case s of
                            (Left i : Left j : s') -> Just (Left (i*j) : s')
+                           (Four (n (Left i)) : Left j : s') -> Just (Four (n (Left (i*j))) : s' )
+                           (Four (n (Left i)) : Four (u (Left j)) : s') -> Just (Four (n (Left (i*j))) : Four (u (Left j)) : s')
                            _ -> Nothing
 cmd Equ          = \s -> case s of
                            (Left i  : Left j  : s') -> Just (Right (i == j) : s')
                            (Middle x : Middle y : s') -> Just (Right (x == y) : s')
-                           (Right a : Right b : s') -> Just (Right (a == b) : s')
+                           (Right a : Right b : s') -> Just (Right (a == b) : s')              
+                           (Four (n (Left i)) : Left j : s') -> Just (Four (n (Left i)) : Right(i == j) : s')
+                           (Four (n (Left i)) : Four (u (Left j)) : s') -> Just (Four (n (Left i)) : Four (u (Left j)) : Right(i == j) : s')
+                           (Four (n (Middle i)) : Middle j : s') -> Just (Four (n (Middle i)) : Right(i == j) : s')
+                           (Four (n (Middle i)) : Four (u (Middle j)) : s') -> Just (Four (n (Middle i)) : Four (u (Middle j)) : Right(i == j) : s')
+                           (Four (n (Right i)) : Right j : s') -> Just (Four (n (Right i)) : Right(i == j) : s')
+                           (Four (n (Right i)) : Four (u (Right j)) : s') -> Just (Four (n (Right i)) : Four (u (Right j)) : Right(i == j) : s')
+                           _ -> Nothing
+cmd Larger       = \s -> case s of
+                           (Left i  : Left j  : s') -> Just (Right (i > j) : s')
+                           (Four (n (Left i)) : Left j : s') -> Just (Four (n (Left i)) : Right(i > j) : s')
+                           (Four (n (Left i)) : Four (u (Left j)) : s') -> Just (Four (n (Left i)) : Four (u (Left j)) : Right(i > j) : s')
+                           _ -> Nothing
+cmd Smaller      = \s -> case s of
+                           (Left i  : Left j  : s') -> Just (Right (i < j) : s')
+                           (Four (n (Left i)) : Left j : s') -> Just (Four (n (Left i)) : Right(i < j) : s')
+                           (Four (n (Left i)) : Four (u (Left j)) : s') -> Just (Four (n (Left i)) : Four (u (Left j)) : Right(i < j) : s')                           
                            _ -> Nothing
 cmd (IfElse t e) = \s -> case s of
                            (Right True  : s') -> prog t s'
                            (Right False : s') -> prog e s'
                            _ -> Nothing
-
+cmd (Loop c r) = \s -> case s of -- it's while loop (not do-while)
+                           (Left i : s') -> Nothing -- Infinity loop
+                           (Middle i : s') -> Nothing -- Infinity loop
+                           (Right True : s') -> Nothing -- Infinity loop
+                           (Four (n (Right True)) : Loop : s') -> Nothing -- Infinity loop
+                           (Right False : s') -> prog s'
+                           (Four (n (Right False)) : Loop : s') -> prog s'
+                           (Four (n (Left i)) : Loop : s') -> prog (loop (Four (n (Left i))) c r) s'
+--                           (Four (n (Left i)) : Loop : Left j : Larger : s') -> loop c r s'
+--                           (Four (n (Left i)) : Loop : Left j : Equ : s') -> loop c r s'
+--                           (Four (n (Middle i)) : Loop : s') -> prog (loop (Four (n (Middle i))) c r) s'
+--                           (Four (n (Middle i)) : Loop : Left j : Smaller : s') -> loop c r s'
+                           _ -> Nothing
 
 -- 8. Define the semantics of a StackLang program.
 prog :: Prog -> Domain
@@ -169,8 +227,20 @@ conditions = undefined
 
 -- 3. Recursion/loops. 
 --    You should provide some way to loop in your language, either through an explicit looping construct (e.g. while) or through recursive functions.
-loops :: Prog -> Domain
-loops = undefined
+
+-- ex) ["Loop", condition, result]
+-- [Loop, PushN 3, PushN 4, Larger, ]
+loop :: Cmd -> Cmd -> Cmd -> Prog
+loop (Four (n (Left i))) [PushN j, Larger] [PushN k, Add] = if (i > j) then [Four (n (Left i))] 
+                                                            else [(Four (n (Left (i+k)))), Loop, [PushN j, Larger], [PushN k, Add]]
+loop (Four (n (Left i))) [PushN j, Smaller] [PushN k, Minus] = if (i < j) then [Four (n (Left i))]
+                                                            else [(Four (n (Left (i-k)))), Loop, [PushN j, Smaller], [PushN k, Minus]]
+loop (Four (n (Left i))) [PushN j, Equ] [PushN k, Add] = if (i == j) then [Four (n (Left i))]
+                                                         else [(Four (n (Left (i+k)))), Loop, [PushN j, Equ], [PushN k, Add]]
+loop (Four (n (Left i))) [PushN j, Equ] [PushN k, Minus] = if (i == j) then [Four (n (Left i))]
+                                                         else [(Four (n (Left (i-k)))), Loop, [PushN j, Equ], [PushN k, Minus]]
+-- loop (Four (n (Middle i))) [PushS j, Equ] [PushS k, Add] = [(Four (n (Left (i+k)))), Loop, [PushN j, Larger], [PushN k, Add]]
+
 
 
 -- 4. Procedures/functions with arguments (or some other abstraction mechanism).
