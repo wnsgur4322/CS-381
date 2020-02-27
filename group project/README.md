@@ -2,7 +2,9 @@
 
 Team members
 > Junhyeok Jeong, jeongju@oregonstate.edu
+
 > Youngjoo Lee, leey3@oregonstate.edu
+
 > Ethan Mendelson, mendelse@oregonstate.edu
 
 Four is a stack-based language with four input types
