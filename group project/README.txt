@@ -5,7 +5,7 @@
 -- Youngjoo Lee, leey3@oregonstate.edu
 -- Ethan Mendelson, mendelse@oregonstate.edu
 
-A stack-based language for variable inputs 
+A stack-based language with variable input types
 (Integer, Bool, String, and (Name with Integer, Bool, or String)). 
 
 To run examples => run <example names> after "ghci group_project.hs"
