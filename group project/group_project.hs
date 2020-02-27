@@ -16,16 +16,24 @@ When designing your language, you must include some version of all of the follow
 -- *Abstract Syntax of Four
 
 type Prog = [Four_Cmd]
-type Function_name = String
+type Varname = String
 
-data Value = PushN Int
-         | PushB Bool
-         | PushS String
+data Value = PushVN Int
+         | PushVB Bool
+         | PushVS String
          | ValueError
           deriving (Eq, Show)
+type Var = (Varname, Value)
 
-type Var = (Varname Value)
-data Flow_Cmd = PushN Int
+-- After cmd for Var
+
+--data ValueAfter = LeftI   a 
+--                | MiddleS b     
+ --               | RightB  c
+                
+
+type VarAfter = (Varname, EitherFour Int String Bool Var)
+data Four_Cmd = PushN Int
          | PushB Bool
          | PushS String
          | PushV Var
@@ -93,11 +101,12 @@ genSum (x:xs) = genSum xs ++ [PushN x, Add]
 --        * bool
 --        * String
 --      * error
-data EitherFour a b c d = Left   a 
-                        | Middle b     
-                        | Right  c
+data EitherFour a b c d = LeftI   a 
+                        | MiddleS b     
+                        | RightB  c
                         | Four d
-
+                        deriving (Eq, Show)
+type Stackone = EitherFour Int String Bool Var
 type Stack = [EitherFour Int String Bool Var]
 
 type Domain = Stack -> Maybe Stack
@@ -105,56 +114,60 @@ type Domain = Stack -> Maybe Stack
 
 -- Define the semantics of a StackLang command (ignore If at first).
 cmd :: Four_Cmd -> Domain
-cmd (PushN i)    = \s -> Just (Left i : s)
-cmd (PushB b)    = \s -> Just (Right b : s)
-cmd (PushS str)  = \s -> Just (Middle str : s)
-cmd (PushV (n val))    = \s -> Just ((Four n (cmd val)) : s)
+cmd (PushN i)    = \s -> Just (LeftI i : s)
+--cmd (PushVN i)    = \s -> Just (LeftI i : s)
+cmd (PushB b)    = \s -> Just (RightB b : s)
+--cmd (PushVB b)    = \s -> Just (RightB b : s)
+cmd (PushS str)  = \s -> Just (MiddleS str : s)
+--cmd (PushVS str)  = \s -> Just (MiddleS str : s)
+--cmd (PushV (n, val))    = \s -> Just ((Four n, (cmd val)) : s)
+cmd (PushV (n, val))    = \s -> Just ((Four (n, val)) : s)
 cmd Add         = \s -> case s of
-                           (Left i : Left j : s') -> Just (Left (i+j) : s')
-                           (Middle x : Middel y : s') -> Just (Middle (x++y) : s')
-                           (Four (n (Left i)) : Left j : s') -> Just (Four (n (Left (i+j))) : s')
-                           (Four (n (Left i)) : Four (u (Left j)) : s') -> Just (Four (n (Left (i+j))) : Four (u (Left j)) : s')
-                           (Four (n (Middle i)) : Middle j : s') -> Just (Four (n (Middle (i++j))) : s')
-                           (Four (n (Middle i)) : Four (u (Middle j)) : s') -> Just (Four (n (Middle (i++j))) : Four (u (Middle j)) : s')
+                           (LeftI i : LeftI j : s') -> Just (LeftI (i+j) : s')
+                           (MiddleS x : MiddleS y : s') -> Just (MiddleS (x++y) : s')
+                           (Four (n, (PushVN i)) : LeftI j : s') -> Just (Four (n, (PushVN (i+j))) : s')
+                           (Four (n, (PushVN i)) : Four (u, (PushVN j)) : s') -> Just (Four (n, (PushVN (i+j))) : Four (u, (PushVN j)) : s')
+                           (Four (n, (PushVS i)) : MiddleS j : s') -> Just (Four (n, (PushVS (i++j))) : s')
+                           (Four (n, (PushVS i)) : Four (u, (PushVS j)) : s') -> Just (Four (n, (PushVS (i++j))) : Four (u, (PushVS j)) : s')
                            _ -> Nothing
 cmd Mul          = \s -> case s of
-                           (Left i : Left j : s') -> Just (Left (i*j) : s')
-                           (Four (n (Left i)) : Left j : s') -> Just (Four (n (Left (i*j))) : s' )
-                           (Four (n (Left i)) : Four (u (Left j)) : s') -> Just (Four (n (Left (i*j))) : Four (u (Left j)) : s')
+                           (LeftI i : LeftI j : s') -> Just (LeftI (i*j) : s')
+                           (Four (n, (PushVN i)) : LeftI j : s') -> Just (Four (n, (PushVN (i*j))) : s' )
+                           (Four (n, (PushVN i)) : Four (u, (PushVN j)) : s') -> Just (Four (n, (PushVN (i*j))) : Four (u, (PushVN j)) : s')
                            _ -> Nothing
 cmd Equ         = \s -> case s of
-                           (Left i  : Left j  : s') -> Just (Right (i == j) : s')
-                           (Middle x : Middle y : s') -> Just (Right (x == y) : s')
-                           (Right a : Right b : s') -> Just (Right (a == b) : s')              
-                           (Four (n (Left i)) : Left j : s') -> Just (Four (n (Left i)) : Right(i == j) : s')
-                           (Four (n (Left i)) : Four (u (Left j)) : s') -> Just (Four (n (Left i)) : Four (u (Left j)) : Right(i == j) : s')
-                           (Four (n (Middle i)) : Middle j : s') -> Just (Four (n (Middle i)) : Right(i == j) : s')
-                           (Four (n (Middle i)) : Four (u (Middle j)) : s') -> Just (Four (n (Middle i)) : Four (u (Middle j)) : Right(i == j) : s')
-                           (Four (n (Right i)) : Right j : s') -> Just (Four (n (Right i)) : Right(i == j) : s')
-                           (Four (n (Right i)) : Four (u (Right j)) : s') -> Just (Four (n (Right i)) : Four (u (Right j)) : Right(i == j) : s')
+                           (LeftI i  : LeftI j  : s') -> Just (RightB (i == j) : s')
+                           (MiddleS x : MiddleS y : s') -> Just (RightB (x == y) : s')
+                           (RightB a : RightB b : s') -> Just (RightB (a == b) : s')              
+                           (Four (n, (PushVN i)) : LeftI j : s') -> Just (Four (n, (PushVN i)) : RightB (i == j) : s')
+                           (Four (n, (PushVN i)) : Four (u, (PushVN j)) : s') -> Just (Four (n, (PushVN i)) : Four (u, (PushVN j)) : RightB (i == j) : s')
+                           (Four (n, (PushVS i)) : MiddleS j : s') -> Just (Four (n, (PushVS i)) : RightB (i == j) : s')
+                           (Four (n, (PushVS i)) : Four (u, (PushVS j)) : s') -> Just (Four (n, (PushVS i)) : Four (u, (PushVS j)) : RightB (i == j) : s')
+                           (Four (n, (PushVB i)) : RightB j : s') -> Just (Four (n, (PushVB i)) : RightB (i == j) : s')
+                           (Four (n, (PushVB i)) : Four (u, (PushVB j)) : s') -> Just (Four (n, (PushVB i)) : Four (u, (PushVB j)) : RightB (i == j) : s')
                            _ -> Nothing
 cmd Larger      = \s -> case s of
-                           (Left i  : Left j  : s') -> Just (Right (i > j) : s')
-                           (Four (n (Left i)) : Left j : s') -> Just (Four (n (Left i)) : Right(i > j) : s')
-                           (Four (n (Left i)) : Four (u (Left j)) : s') -> Just (Four (n (Left i)) : Four (u (Left j)) : Right(i > j) : s')
+                           (LeftI i  : LeftI j  : s') -> Just (RightB (i > j) : s')
+                           (Four (n, (PushVN i)) : LeftI j : s') -> Just (Four (n, (PushVN i)) : RightB (i > j) : s')
+                           (Four (n, (PushVN i)) : Four (u, (PushVN j)) : s') -> Just (Four (n, (PushVN i)) : Four (u, (PushVN j)) : RightB (i > j) : s')
                            _ -> Nothing
 cmd Smaller     = \s -> case s of
-                           (Left i  : Left j  : s') -> Just (Right (i < j) : s')
-                           (Four (n (Left i)) : Left j : s') -> Just (Four (n (Left i)) : Right(i < j) : s')
-                           (Four (n (Left i)) : Four (u (Left j)) : s') -> Just (Four (n (Left i)) : Four (u (Left j)) : Right(i < j) : s')                           
+                           (LeftI i  : LeftI j  : s') -> Just (RightB (i < j) : s')
+                           (Four (n, (PushVN i)) : LeftI j : s') -> Just (Four (n, (PushVN i)) : RightB (i < j) : s')
+                           (Four (n, (PushVN i)) : Four (u, (PushVN j)) : s') -> Just (Four (n, (PushVN i)) : Four (u, (PushVN j)) : RightB (i < j) : s')                           
                            _ -> Nothing
 cmd (IfElse t e) = \s -> case s of
-                           (Right True  : s') -> prog t s'
-                           (Right False : s') -> prog e s'
+                           (RightB True  : s') -> prog t s'
+                           (RightB False : s') -> prog e s'
                            _ -> Nothing
 cmd (Loop c r) = \s -> case s of -- it's while loop (not do-while)
-                           (Left i : s') -> Nothing -- Infinity loop
-                           (Middle i : s') -> Nothing -- Infinity loop
-                           (Right True : s') -> Nothing -- Infinity loop
-                           (Four (n (Right True)) : Loop : s') -> Nothing -- Infinity loop
-                           (Right False : s') -> prog s'
-                           (Four (n (Right False)) : Loop : s') -> prog s'
-                           (Four (n (Left i)) : Loop : s') -> prog (loop (Four (n (Left i))) c r) s'
+                           (LeftI i : s') -> Nothing -- Infinity loop
+                           (MiddleS i : s') -> Nothing -- Infinity loop
+                           (RightB True : s') -> Nothing -- Infinity loop
+                           (Four (n, (PushVB True)) : s') -> Nothing -- Infinity loop
+--                           (RightB False : s') -> prog s'
+                           (Four (n, (PushVB False)) : s') -> Just ((Four (n, (PushVB False))) : s')
+                           (Four (n, (PushVN i)) : s') -> Just ((loop (Four (n, (PushVN i))) c r) : s')
 --                           (Four (n (Left i)) : Loop : Left j : Larger : s') -> loop c r s'
 --                           (Four (n (Left i)) : Loop : Left j : Equ : s') -> loop c r s'
 --                           (Four (n (Middle i)) : Loop : s') -> prog (loop (Four (n (Middle i))) c r) s'
@@ -201,17 +214,19 @@ conditions = undefined
 
 -- ex) ["Loop", condition, result]
 -- [Loop, PushN 3, PushN 4, Larger, ]
-loop :: Four_Cmd -> Four_Cmd -> Four_Cmd -> Prog
-loop (Four (n (Left i))) [PushN j, Larger] [PushN k, Add] = if (i > j) then [Four (n (Left i))] 
-                                                            else [(Four (n (Left (i+k)))), Loop, [PushN j, Larger], [PushN k, Add]]
-loop (Four (n (Left i))) [PushN j, Smaller] [PushN k, Minus] = if (i < j) then [Four (n (Left i))]
-                                                            else [(Four (n (Left (i-k)))), Loop, [PushN j, Smaller], [PushN k, Minus]]
-loop (Four (n (Left i))) [PushN j, Equ] [PushN k, Add] = if (i == j) then [Four (n (Left i))]
-                                                         else [(Four (n (Left (i+k)))), Loop, [PushN j, Equ], [PushN k, Add]]
-loop (Four (n (Left i))) [PushN j, Equ] [PushN k, Minus] = if (i == j) then [Four (n (Left i))]
-                                                         else [(Four (n (Left (i-k)))), Loop, [PushN j, Equ], [PushN k, Minus]]
+loop :: Stackone -> Prog -> Prog -> Stackone
+loop (Four (n, (PushVN i))) [PushN j, Larger] [PushN k, Add] = if (i > j) then Four (n, (PushVN i)) 
+                                                            else loop (Four (n, (PushVN (i+k)))) [PushN j, Larger] [PushN k, Add]
+loop (Four (n, (PushVN i))) [PushN j, Smaller] [PushN k, Minus] = if (i < j) then Four (n, (PushVN i))
+                                                            else loop (Four (n, (PushVN (i-k)))) [PushN j, Smaller] [PushN k, Minus]
+loop (Four (n, (PushVN i))) [PushN j, Equ] [PushN k, Add] = if (i == j) then Four (n, (PushVN i))
+                                                         else loop (Four (n, (PushVN (i+k)))) [PushN j, Equ] [PushN k, Add]
+loop (Four (n, (PushVN i))) [PushN j, Equ] [PushN k, Minus] = if (i == j) then Four (n, (PushVN i))
+                                                         else loop (Four (n, (PushVN (i-k)))) [PushN j, Equ] [PushN k, Minus]
 -- loop (Four (n (Middle i))) [PushS j, Equ] [PushS k, Add] = [(Four (n (Left (i+k)))), Loop, [PushN j, Larger], [PushN k, Add]]
 
+exloop :: Prog
+exloop = [PushV ("test", PushVN 4), Loop [PushN 5, Larger] [PushN 1, Add]]
 
 
 -- 4. Procedures/functions with arguments (or some other abstraction mechanism).
