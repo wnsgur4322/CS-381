@@ -212,8 +212,6 @@ conditions = undefined
 -- 3. Recursion/loops. 
 --    You should provide some way to loop in your language, either through an explicit looping construct (e.g. while) or through recursive functions.
 
--- ex) ["Loop", condition, result]
--- [Loop, PushN 3, PushN 4, Larger, ]
 loop :: Stackone -> Prog -> Prog -> Stackone
 loop (Four (n, (PushVN i))) [PushN j, Larger] [PushN k, Add] = if (i > j) then Four (n, (PushVN i)) 
                                                             else loop (Four (n, (PushVN (i+k)))) [PushN j, Larger] [PushN k, Add]
@@ -225,9 +223,17 @@ loop (Four (n, (PushVN i))) [PushN j, Equ] [PushN k, Minus] = if (i == j) then F
                                                          else loop (Four (n, (PushVN (i-k)))) [PushN j, Equ] [PushN k, Minus]
 -- loop (Four (n (Middle i))) [PushS j, Equ] [PushS k, Add] = [(Four (n (Left (i+k)))), Loop, [PushN j, Larger], [PushN k, Add]]
 
-exloop :: Prog
-exloop = [PushV ("test", PushVN 4), Loop [PushN 5, Larger] [PushN 1, Add]]
+exloop_good1 :: Prog
+exloop_good1 = [PushV ("LoopGood1", PushVN 4), Loop [PushN 5, Larger] [PushN 1, Add]]
 
+exloop_good2 :: Prog
+exloop_good2 = [PushV ("LoopGood2", PushVN 4), Loop [PushN 2, Smaller] [PushN 1, Minus]]
+
+exloop_bad1 :: Prog
+exloop_bad1 = [PushV ("LoopBad1", PushVB True), Loop [] [], PushN 5, PushN 1, Add]
+
+exloop_bad2 :: Prog
+exloop_bad2 = [PushV ("LoopBad2", PushVS "HELLO"), Loop [] [], PushN 5, PushN 1, Add]
 
 -- 4. Procedures/functions with arguments (or some other abstraction mechanism).
 --    You should provide a way to factor out repeated code and give it a name so that it can be reused. 
