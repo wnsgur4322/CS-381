@@ -38,13 +38,18 @@ data Four_Cmd = PushN Int
          | PushS String
          | PushV Var
          | Add
-         | Minus
+         | Sub
          | Mul
          | Equ
          | Larger
          | Smaller
          | IfElse Prog Prog
          | Loop Prog Prog
+         | Dup
+         | Drop
+         | Swap
+         | Over
+         | Rot
   deriving (Eq,Show)
 
 
@@ -130,6 +135,11 @@ cmd Add         = \s -> case s of
                            (Four (n, (PushVS i)) : MiddleS j : s') -> Just (Four (n, (PushVS (i++j))) : s')
                            (Four (n, (PushVS i)) : Four (u, (PushVS j)) : s') -> Just (Four (n, (PushVS (i++j))) : Four (u, (PushVS j)) : s')
                            _ -> Nothing
+cmd Sub         = \s -> case s of
+                           (LeftI i : LeftI j : s') -> Just (LeftI (i-j) : s')
+                           (Four (n, (PushVN i)) : LeftI j : s') -> Just (Four (n, (PushVN (i-j))) : s')
+                           (Four (n, (PushVN i)) : Four (u, (PushVN j)) : s') -> Just (Four (n, (PushVN (i-j))) : Four (u, (PushVN j)) : s')
+                           _ -> Nothing
 cmd Mul          = \s -> case s of
                            (LeftI i : LeftI j : s') -> Just (LeftI (i*j) : s')
                            (Four (n, (PushVN i)) : LeftI j : s') -> Just (Four (n, (PushVN (i*j))) : s' )
@@ -165,7 +175,7 @@ cmd (Loop c r) = \s -> case s of -- it's while loop (not do-while)
                            (MiddleS i : s') -> Nothing -- Infinity loop
                            (RightB True : s') -> Nothing -- Infinity loop
                            (Four (n, (PushVB True)) : s') -> Nothing -- Infinity loop
---                           (RightB False : s') -> prog s'
+                           (RightB False : s') -> Just s'
                            (Four (n, (PushVB False)) : s') -> Just ((Four (n, (PushVB False))) : s')
                            (Four (n, (PushVN i)) : s') -> Just ((loop (Four (n, (PushVN i))) c r) : s')
 --                           (Four (n (Left i)) : Loop : Left j : Larger : s') -> loop c r s'
@@ -173,6 +183,39 @@ cmd (Loop c r) = \s -> case s of -- it's while loop (not do-while)
 --                           (Four (n (Middle i)) : Loop : s') -> prog (loop (Four (n (Middle i))) c r) s'
 --                           (Four (n (Middle i)) : Loop : Left j : Smaller : s') -> loop c r s'
                            _ -> Nothing
+cmd Dup         = \s -> case s of
+                           (LeftI i : s') -> Just (LeftI i : LeftI i : s')
+                           (MiddleS x : s') -> Just (MiddleS x : MiddleS x : s')
+                           (RightB a : s') -> Just (RightB a : RightB a : s')              
+                           (Four (n, (PushVN i)) : s') -> Just (Four (n, (PushVN i)) : Four (n, (PushVN i)) : s')
+                           (Four (n, (PushVS i)) : s') -> Just (Four (n, (PushVS i)) : Four (n, (PushVS i)) : s')
+                           (Four (n, (PushVB i)) : s') -> Just (Four (n, (PushVB i)) : Four (n, (PushVB i)) : s')
+                           _ -> Nothing
+cmd Drop         = \s -> case s of
+                           (LeftI i : s') -> Just (s')
+                           (MiddleS x : s') -> Just (s')
+                           (RightB a : s') -> Just (s')              
+                           (Four (n, (PushVN i)) : s') -> Just (s')
+                           (Four (n, (PushVS i)) : s') -> Just (s')
+                           (Four (n, (PushVB i)) : s') -> Just (s')
+                           _ -> Nothing
+cmd Swap         = \s -> case s of
+--                           (LeftI i  : LeftI j  : s') -> Just (LeftI j  : LeftI i : s')
+--                           (LeftI i  : MiddleS x  : s') -> Just (MiddleS x  : LeftI i : s')
+--                           (LeftI i  : RightB a  : s') -> Just (RightB a  : LeftI i : s')
+--                           (LeftI i  : Four a : s') -> Just (Four a : LeftI i : s')
+                           (LeftI i  : t  : s') -> Just (t  : LeftI i : s')
+                           (MiddleS x : t : s') -> Just (t : MiddleS x : s')
+                           (RightB a : t : s') -> Just (t : RightB a : s')              
+                           (Four a : t : s') -> Just (t : Four a : s')
+                           _ -> Nothing
+cmd Over     = \s -> case s of
+                           (x : y : s') -> Just (x : y : x : s')
+                           _ -> Nothing
+cmd Rot     = \s -> case s of
+                           (x : y : z : s') -> Just (y : z : x : s')
+                           _ -> Nothing
+
 
 -- 8. Define the semantics of a StackLang program.
 prog :: Prog -> Domain
@@ -198,36 +241,28 @@ run p = prog p []
 
 
 -- 2. Conditionals.
---    You should provide some way to branch in your language (e.g. if-then-else).
-conditions :: Prog -> Domain
-conditions = undefined
--- Conditions with comparing two strings
-
--- Conditions with int
-
--- conditions with T/F
-
+-- You should provide some way to branch in your language (e.g. if-then-else).
+-- The condtion (which treats string, bool, and integer types) is defined in above cmd (IfElse)
 
 
 -- 3. Recursion/loops. 
 --    You should provide some way to loop in your language, either through an explicit looping construct (e.g. while) or through recursive functions.
-
+-- Loops (While loop) for Integers.
 loop :: Stackone -> Prog -> Prog -> Stackone
 loop (Four (n, (PushVN i))) [PushN j, Larger] [PushN k, Add] = if (i > j) then Four (n, (PushVN i)) 
                                                             else loop (Four (n, (PushVN (i+k)))) [PushN j, Larger] [PushN k, Add]
-loop (Four (n, (PushVN i))) [PushN j, Smaller] [PushN k, Minus] = if (i < j) then Four (n, (PushVN i))
-                                                            else loop (Four (n, (PushVN (i-k)))) [PushN j, Smaller] [PushN k, Minus]
+loop (Four (n, (PushVN i))) [PushN j, Smaller] [PushN k, Sub] = if (i < j) then Four (n, (PushVN i))
+                                                            else loop (Four (n, (PushVN (i-k)))) [PushN j, Smaller] [PushN k, Sub]
 loop (Four (n, (PushVN i))) [PushN j, Equ] [PushN k, Add] = if (i == j) then Four (n, (PushVN i))
                                                          else loop (Four (n, (PushVN (i+k)))) [PushN j, Equ] [PushN k, Add]
-loop (Four (n, (PushVN i))) [PushN j, Equ] [PushN k, Minus] = if (i == j) then Four (n, (PushVN i))
-                                                         else loop (Four (n, (PushVN (i-k)))) [PushN j, Equ] [PushN k, Minus]
--- loop (Four (n (Middle i))) [PushS j, Equ] [PushS k, Add] = [(Four (n (Left (i+k)))), Loop, [PushN j, Larger], [PushN k, Add]]
+loop (Four (n, (PushVN i))) [PushN j, Equ] [PushN k, Sub] = if (i == j) then Four (n, (PushVN i))
+                                                         else loop (Four (n, (PushVN (i-k)))) [PushN j, Equ] [PushN k, Sub]
 
 exloop_good1 :: Prog
 exloop_good1 = [PushV ("LoopGood1", PushVN 4), Loop [PushN 5, Larger] [PushN 1, Add]]
 
 exloop_good2 :: Prog
-exloop_good2 = [PushV ("LoopGood2", PushVN 4), Loop [PushN 2, Smaller] [PushN 1, Minus]]
+exloop_good2 = [PushV ("LoopGood2", PushVN 4), Loop [PushN 2, Smaller] [PushN 1, Sub]]
 
 exloop_bad1 :: Prog
 exloop_bad1 = [PushV ("LoopBad1", PushVB True), Loop [] [], PushN 5, PushN 1, Add]
@@ -242,6 +277,35 @@ exloop_bad2 = [PushV ("LoopBad2", PushVS "HELLO"), Loop [] [], PushN 5, PushN 1,
 
 -- 5. Stack manipulation operations (stack-based languages only). 
 --    You should provide a set of basic operations for manipulating values on the stack. You may want to look at a set of Forth stack maneuvers for inspiration. -}
+ex_dupgood :: Prog
+ex_dupgood = [PushN 4, Dup]
+
+ex_dupbad :: Prog
+ex_dupbad = [Dup, Add]
+
+ex_dropgood :: Prog
+ex_dropgood = [PushN 4, PushN 5, Drop]
+
+ex_dropbad :: Prog
+ex_dropbad = [PushN 4, PushN 5, Drop, Add]
+
+ex_swapgood :: Prog
+ex_swapgood = [PushN 4, PushS "First", Swap]
+
+ex_swapbad :: Prog
+ex_swapbad = [PushN 4, Swap]
+
+ex_overgood :: Prog
+ex_overgood = [PushN 4, PushS "First", Over]
+
+ex_overbad :: Prog
+ex_overbad = [PushN 4, Over]
+
+ex_rotgood :: Prog
+ex_rotgood = [PushN 1, PushN 2, PushN 3, Rot]
+
+ex_rotbad :: Prog
+ex_rotbad = [PushN 1, PushN 2, Rot]
 
 {-Additionally, you must include at least 3 points worth of the following features. The point value of each feature is indicated in parentheses after the feature name.
 1. Strings and operations (1).
