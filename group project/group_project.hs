@@ -3,7 +3,7 @@
 -- Youngjoo Lee, leey3@oregonstate.edu
 -- Ethan Mendelson, mendelse@oregonstate.edu
 
-module Group_project where
+module Four where
 import Prelude hiding (Num)
 
 {- Feature menu
@@ -46,47 +46,6 @@ data Four_Cmd = PushN Int
          | IfElse Prog Prog
          | Loop Prog Prog
   deriving (Eq,Show)
-
-
--- Write the following StackLang program as a Haskell value:
---
---   3 4 add 5 equ
---
-ex1 :: Prog
-ex1 = [PushN 3, PushN 4, Add, PushN 5, Equ]
-
-
-
--- Write a StackLang program that:
---     * checks whether 3 and 4 are equal
---     * if so, returns the result of adding 5 and 6
---     * if not, returns the value false
---    First write it in concrete syntax, then in abstract syntax as a Haskell value.
---
---    3 4 equ if 5 6 add else false end
---
-ex2 :: Prog
-ex2 = [PushN 3, PushN 4, Equ, IfElse [PushN 5, PushN 6, Add] [PushB False]]
-
-
--- Write a Haskell function that takes two arguments x and y
---    and generates a StackLang program that adds both x and y to
---    the number on the top of the stack
-genAdd2 :: Int -> Int -> Prog
-genAdd2 x y = [PushN x, PushN y, Add, Add]
-           -- [PushN x, Add, PushN y, Add]
-           -- [PushN (x+y), Add]  -- doing as much as possible at the metalanguage level
-
-
--- Write a Haskell function that takes a list of integers and
---    generates a StackLang program that sums them all up.
-genSum :: [Int] -> Prog
-genSum []     = [PushN 0]
-genSum (x:xs) = genSum xs ++ [PushN x, Add]
-  -- [PushN x] ++ genSum xs ++ [Add]  -- this one works but is memory inefficient
-  -- genSum xs = [PushN (sum xs)] -- doing as much as possible at the metalanguage level
-
-
 
 --
 -- * Semantics of StackLang (now!)
