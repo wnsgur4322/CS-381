@@ -1,4 +1,4 @@
-# CS381 FinalProject
+CS381 FinalProject
 
 -- Team members
 -- Junhyeok Jeong, jeongju@oregonstate.edu
