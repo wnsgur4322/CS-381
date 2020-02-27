@@ -88,7 +88,9 @@ cmd (PushS str)  = \s -> Just (MiddleS str : s)
 cmd (PushV (n, val))    = \s -> Just ((Four (n, val)) : s)
 cmd Add         = \s -> case s of
                            (LeftI i : LeftI j : s') -> Just (LeftI (i+j) : s')
+                           (LeftI i : Four (n, (PushVN j)) : s') -> Just (Four (n, (PushVN (i+j))) : s')
                            (MiddleS x : MiddleS y : s') -> Just (MiddleS (x++y) : s')
+                           (MiddleS x : Four (n, (PushVS y)) : s') -> Just (Four (n, (PushVS (x++y))) : s')
                            (Four (n, (PushVN i)) : LeftI j : s') -> Just (Four (n, (PushVN (i+j))) : s')
                            (Four (n, (PushVN i)) : Four (u, (PushVN j)) : s') -> Just (Four (n, (PushVN (i+j))) : Four (u, (PushVN j)) : s')
                            (Four (n, (PushVS i)) : MiddleS j : s') -> Just (Four (n, (PushVS (i++j))) : s')
@@ -96,19 +98,24 @@ cmd Add         = \s -> case s of
                            _ -> Nothing
 cmd Sub         = \s -> case s of
                            (LeftI i : LeftI j : s') -> Just (LeftI (i-j) : s')
+                           (LeftI i : Four (n, (PushVN j)) : s') -> Just (Four (n, (PushVN (i-j))) : s')
                            (Four (n, (PushVN i)) : LeftI j : s') -> Just (Four (n, (PushVN (i-j))) : s')
                            (Four (n, (PushVN i)) : Four (u, (PushVN j)) : s') -> Just (Four (n, (PushVN (i-j))) : Four (u, (PushVN j)) : s')
                            _ -> Nothing
 cmd Mul          = \s -> case s of
                            (LeftI i : LeftI j : s') -> Just (LeftI (i*j) : s')
+                           (LeftI i : Four (n, (PushVN j)) : s') -> Just (Four (n, (PushVN (i*j))) : s' )
                            (Four (n, (PushVN i)) : LeftI j : s') -> Just (Four (n, (PushVN (i*j))) : s' )
                            (Four (n, (PushVN i)) : Four (u, (PushVN j)) : s') -> Just (Four (n, (PushVN (i*j))) : Four (u, (PushVN j)) : s')
                            _ -> Nothing
 cmd Equ         = \s -> case s of
                            (LeftI i  : LeftI j  : s') -> Just (RightB (i == j) : s')
+                           (LeftI i : Four (n, (PushVN j)) :s') -> Just (RightB (i == j) : Four (n, (PushVN j)) : s')
                            (MiddleS x : MiddleS y : s') -> Just (RightB (x == y) : s')
-                           (RightB a : RightB b : s') -> Just (RightB (a == b) : s')              
-                           (Four (n, (PushVN i)) : LeftI j : s') -> Just (Four (n, (PushVN i)) : RightB (i == j) : s')
+                           (MiddleS x : Four (n, (PushVS i)) : s') -> Just (Four (n, (PushVS i)) : RightB (x == i) : s')
+                           (RightB a : RightB b : s') -> Just (RightB (a == b) : s')
+                           (RightB a : Four (n, (PushVB i)) : s') -> Just (Four (n, (PushVB i)) : RightB (a == i) : s')              
+                           (Four (n, (PushVN i)) : LeftI j : s') -> Just (RightB (i == j) : Four (n, (PushVN i)) : s')
                            (Four (n, (PushVN i)) : Four (u, (PushVN j)) : s') -> Just (Four (n, (PushVN i)) : Four (u, (PushVN j)) : RightB (i == j) : s')
                            (Four (n, (PushVS i)) : MiddleS j : s') -> Just (Four (n, (PushVS i)) : RightB (i == j) : s')
                            (Four (n, (PushVS i)) : Four (u, (PushVS j)) : s') -> Just (Four (n, (PushVS i)) : Four (u, (PushVS j)) : RightB (i == j) : s')
@@ -117,13 +124,19 @@ cmd Equ         = \s -> case s of
                            _ -> Nothing
 cmd Larger      = \s -> case s of
                            (LeftI i  : LeftI j  : s') -> Just (RightB (i > j) : s')
-                           (Four (n, (PushVN i)) : LeftI j : s') -> Just (Four (n, (PushVN i)) : RightB (i > j) : s')
-                           (Four (n, (PushVN i)) : Four (u, (PushVN j)) : s') -> Just (Four (n, (PushVN i)) : Four (u, (PushVN j)) : RightB (i > j) : s')
+                           (LeftI i : Four (n, (PushVN j)) : s') -> Just (RightB (i > j) : Four (n, (PushVN j)) : s')
+                           (Four (n, (PushVN i)) : LeftI j : s') -> Just (RightB (i > j) : Four (n, (PushVN i)) : s')
+--                           (Four (n, (PushVN i)) : LeftI j : s') -> Just (Four (n, (PushVN i)) : RightB (i > j) : s')
+                           (Four (n, (PushVN i)) : Four (u, (PushVN j)) : s') -> Just (RightB (i > j) : Four (n, (PushVN i)) : Four (u, (PushVN j)) : s')
+--                           (Four (n, (PushVN i)) : Four (u, (PushVN j)) : s') -> Just (Four (n, (PushVN i)) : Four (u, (PushVN j)) : RightB (i > j) : s')
                            _ -> Nothing
 cmd Smaller     = \s -> case s of
                            (LeftI i  : LeftI j  : s') -> Just (RightB (i < j) : s')
-                           (Four (n, (PushVN i)) : LeftI j : s') -> Just (Four (n, (PushVN i)) : RightB (i < j) : s')
-                           (Four (n, (PushVN i)) : Four (u, (PushVN j)) : s') -> Just (Four (n, (PushVN i)) : Four (u, (PushVN j)) : RightB (i < j) : s')                           
+                           (LeftI i : Four (n, (PushVN j)) : s') -> Just (RightB (i < j) : Four (n, (PushVN j)) : s')
+                           (Four (n, (PushVN i)) : LeftI j : s') -> Just (RightB (i < j) : Four (n, (PushVN i)) : s')
+                           --(Four (n, (PushVN i)) : LeftI j : s') -> Just (Four (n, (PushVN i)) : RightB (i < j) : s')
+                           (Four (n, (PushVN i)) : Four (u, (PushVN j)) : s') -> Just (RightB (i < j) : Four (n, (PushVN i)) : Four (u, (PushVN j)) : s')
+                           --(Four (n, (PushVN i)) : Four (u, (PushVN j)) : s') -> Just (Four (n, (PushVN i)) : Four (u, (PushVN j)) : RightB (i < j) : s')                           
                            _ -> Nothing
 cmd (IfElse t e) = \s -> case s of
                            (RightB True  : s') -> prog t s'
@@ -202,6 +215,18 @@ run p = prog p []
 -- 2. Conditionals.
 -- You should provide some way to branch in your language (e.g. if-then-else).
 -- The condtion (which treats string, bool, and integer types) is defined in above cmd (IfElse)
+ex_ifgood1 :: Prog
+ex_ifgood1 = [PushV ("x", PushVN 2), PushN 2, Equ, IfElse [PushN 2, Add] [PushB False]]
+
+ex_ifgood2 :: Prog
+ex_ifgood2 = [PushS "Equal", PushS "Equal", Equ, IfElse [PushB True] [PushB False]]
+
+ex_ifbad1 :: Prog
+ex_ifbad1 = [PushS "Equal", PushN 3, Equ, IfElse [PushB True] [PushB False]]
+
+ex_ifbad2 :: Prog
+ex_ifbad2 = [PushS "Equal", PushS "Equal", IfElse [PushB True] [PushB False]]
+
 
 
 -- 3. Recursion/loops. 
