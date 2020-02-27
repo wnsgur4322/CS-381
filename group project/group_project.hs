@@ -4,6 +4,7 @@
 -- Ethan Mendelson, mendelse@oregonstate.edu
 
 module Group_project where
+import Prelude hiding (Num)
 
 {- Feature menu
 When designing your language, you must include some version of all of the following features.
@@ -11,57 +12,29 @@ When designing your language, you must include some version of all of the follow
     You should provide at least boolean values and integers; you may want to include floating point numbers as well.
     You will need a way to represent both literal values and operations on these types. -}
 
-import Prelude hiding (Num)
-
-
 --
--- * Syntax of StackLang
---
+-- *Abstract Syntax of Four
 
--- Grammar for StackLang:
--- 
---    num ::= (any integer)
---   bool ::= `true`  |  `false`
---   prog ::= cmd*
---    cmd ::= num                         push a number on the stack
---         |  bool                        push a boolean on the stack
---         |  String                      push a string on the stack
---         |  `add`                       add the top two numbers on the stack
---         |  `mul`                       multiply the top two numbers on the stack
---         |  `equ`                       check whether the top two elements are equal
---         |  `if` prog `else` prog `end` if the value on the top is true
---                                        then run the first program, else run the second
+type Prog = [Four_Cmd]
+type Function_name = String
 
--- Encode the above grammar as a set of Haskell data types
-
-type Prog = [Cmd]
-
-type Varname = String
-
-{-
-data Value = IntV Int 
-          | StringV String
-          | BoolV Bool
-          | ValueError
-          deriving (Eq, Show)
--}
-data Value = PushN Int 
-          | PushB Bool
-          | PushS String
-          | ValueError
+data Value = PushN Int
+         | PushB Bool
+         | PushS String
+         | ValueError
           deriving (Eq, Show)
 
 type Var = (Varname Value)
-data Cmd = PushN Int
+data Flow_Cmd = PushN Int
          | PushB Bool
          | PushS String
-         | PushV Var 
-         | Add Value Value
-         | Minus Value Value
-         | Mul Value Value
-         | Equ Value Value
-         | Larger Value Value
-         | Smaller Value Value
+         | PushV Var
+         | Add
+         | Minus
+         | Mul
+         | Equ
+         | Larger
+         | Smaller
          | IfElse Prog Prog
          | Loop Prog Prog
   deriving (Eq,Show)
@@ -131,12 +104,12 @@ type Domain = Stack -> Maybe Stack
 
 
 -- Define the semantics of a StackLang command (ignore If at first).
-cmd :: Cmd -> Domain
+cmd :: Four_Cmd -> Domain
 cmd (PushN i)    = \s -> Just (Left i : s)
 cmd (PushB b)    = \s -> Just (Right b : s)
 cmd (PushS str)  = \s -> Just (Middle str : s)
-cmd (PushV val)    = \s -> Just ((Four val : s)
-cmd Add l r         = \s -> case s of
+cmd (PushV (n val))    = \s -> Just ((Four n (cmd val)) : s)
+cmd Add         = \s -> case s of
                            (Left i : Left j : s') -> Just (Left (i+j) : s')
                            (Middle x : Middel y : s') -> Just (Middle (x++y) : s')
                            (Four (n (Left i)) : Left j : s') -> Just (Four (n (Left (i+j))) : s')
@@ -144,12 +117,12 @@ cmd Add l r         = \s -> case s of
                            (Four (n (Middle i)) : Middle j : s') -> Just (Four (n (Middle (i++j))) : s')
                            (Four (n (Middle i)) : Four (u (Middle j)) : s') -> Just (Four (n (Middle (i++j))) : Four (u (Middle j)) : s')
                            _ -> Nothing
-cmd Mul l r          = \s -> case s of
+cmd Mul          = \s -> case s of
                            (Left i : Left j : s') -> Just (Left (i*j) : s')
                            (Four (n (Left i)) : Left j : s') -> Just (Four (n (Left (i*j))) : s' )
                            (Four (n (Left i)) : Four (u (Left j)) : s') -> Just (Four (n (Left (i*j))) : Four (u (Left j)) : s')
                            _ -> Nothing
-cmd Equ l r         = \s -> case s of
+cmd Equ         = \s -> case s of
                            (Left i  : Left j  : s') -> Just (Right (i == j) : s')
                            (Middle x : Middle y : s') -> Just (Right (x == y) : s')
                            (Right a : Right b : s') -> Just (Right (a == b) : s')              
@@ -160,12 +133,12 @@ cmd Equ l r         = \s -> case s of
                            (Four (n (Right i)) : Right j : s') -> Just (Four (n (Right i)) : Right(i == j) : s')
                            (Four (n (Right i)) : Four (u (Right j)) : s') -> Just (Four (n (Right i)) : Four (u (Right j)) : Right(i == j) : s')
                            _ -> Nothing
-cmd Larger l r      = \s -> case s of
+cmd Larger      = \s -> case s of
                            (Left i  : Left j  : s') -> Just (Right (i > j) : s')
                            (Four (n (Left i)) : Left j : s') -> Just (Four (n (Left i)) : Right(i > j) : s')
                            (Four (n (Left i)) : Four (u (Left j)) : s') -> Just (Four (n (Left i)) : Four (u (Left j)) : Right(i > j) : s')
                            _ -> Nothing
-cmd Smaller l r     = \s -> case s of
+cmd Smaller     = \s -> case s of
                            (Left i  : Left j  : s') -> Just (Right (i < j) : s')
                            (Four (n (Left i)) : Left j : s') -> Just (Four (n (Left i)) : Right(i < j) : s')
                            (Four (n (Left i)) : Four (u (Left j)) : s') -> Just (Four (n (Left i)) : Four (u (Left j)) : Right(i < j) : s')                           
@@ -228,7 +201,7 @@ conditions = undefined
 
 -- ex) ["Loop", condition, result]
 -- [Loop, PushN 3, PushN 4, Larger, ]
-loop :: Cmd -> Cmd -> Cmd -> Prog
+loop :: Four_Cmd -> Four_Cmd -> Four_Cmd -> Prog
 loop (Four (n (Left i))) [PushN j, Larger] [PushN k, Add] = if (i > j) then [Four (n (Left i))] 
                                                             else [(Four (n (Left (i+k)))), Loop, [PushN j, Larger], [PushN k, Add]]
 loop (Four (n (Left i))) [PushN j, Smaller] [PushN k, Minus] = if (i < j) then [Four (n (Left i))]
