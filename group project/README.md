@@ -15,10 +15,13 @@ To run examples => run <example names> after "ghci group_project.hs"
 list of examples:
 > ex_ifgood1
 >> Expected output: Just [Four ("x",PushVN 4)]
+
 > ex_ifgood2
 >> Expected output: Just [RightB True]
+
 > ex_ifbad1
 >> Expected output: Nothing
+
 ex_ifbad2
 - Expected output: Nothing
 exloop_good1
