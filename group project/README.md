@@ -17,7 +17,7 @@ Four is a stack-based language with four input types
 
 
 To run examples => run <example names> after "ghci group_project.hs"
-  -------------
+-------------
 > Ex) run ex_ifgood1
   
 > Ex) run exloop_good1
