@@ -14,7 +14,7 @@ When designing your language, you must include some version of all of the follow
 
 --
 -- *Abstract Syntax of Four
-
+type Prog = [Stack_Cmd]
 type Varname = String
 type Var = (Varname, Val)
 
@@ -259,7 +259,77 @@ extest3 = [PushN 3, Let("Test"), PushN 4, Let("Test2"), Smaller, Dup]
     This feature would enable statically checking your program for errors before running it. 
     For a stack-based language, it would ensure that the stack never underflows and that operations are always applied with values of the correct type on the stack; 
     for imperative and functional languages the type system would ensure that there are no type errors caused by applying an operation, function, or procedure to an argument of the wrong type.
+-}
+data Type = TBool | FBool | TInt | TString | TError
+  deriving (Eq,Show)
+type Tstack = [Type]
 
+typeOf :: Stack_Cmd -> Tstack -> [Type]
+typeOf (PushN i)    = \s -> (TInt : s)
+typeOf (PushB b)    = \s -> if b == True then (TBool : s) else (FBool : s)
+typeOf (PushS s)    = \s -> (TString : s)
+typeOf Add          = \s -> case s of
+                      (TInt : TInt : s') -> (TInt : s')
+                      (TString : TString : s') -> (TString : s')
+                      _ -> [TError]
+typeOf Sub          = \s -> case s of
+                      (TInt : TInt : s') -> (TInt : s')
+                      _ -> [TError]
+typeOf Mul          = \s -> case s of
+                      (TInt : TInt : s') -> (TInt : s')
+                      _ -> [TError]
+typeOf Equ          = \s -> case s of
+                      (TInt : TInt : s') -> (TBool : s')
+                      (TBool : TBool : s') -> (TBool : s')
+                      (TBool : FBool : s') -> (FBool : s')
+                      (FBool : TBool : s') -> (FBool : s')
+                      (FBool : FBool : s') -> (FBool : s')
+                      (TString : TString : s') -> (TBool : s')
+                      _ -> [TError]
+typeOf (Let n)      = \s -> case s of
+                      (TInt : s') -> (TInt : s')
+                      (TString : s') -> (TString : s')
+                      (TBool : s') -> (TBool : s')
+                      (FBool : s') -> (FBool : s')
+                      _ ->[TError]
+typeOf (IfElse t e) = \s -> case s of
+                      (TBool: s') -> case (typeprog t s', typeprog e s') of
+                                     (tt, te) -> if tt == te then if (tt /= [TError]) then (tt ++ s') else [TError] else [TError]
+                      _ -> [TError]
+typeOf (Loop c r) = \s -> case s of
+                        (TInt : s') -> case (typeprog c s', typeprog r s') of
+                            (TBool : _ , x : _) -> (x : s')
+                            (FBool : _ , x : _) -> (x : s')
+                            _ -> [TError]
+                        (TBool : s') -> [TError]
+                        (FBool : s') -> typeprog r s'
+                        _ -> [TError]
+typeOf Dup        = \s -> case s of
+                      (TInt : s') -> (TInt : s')
+                      (TBool : s') -> (TBool : s')
+                      (FBool : s') -> (FBool : s')
+                      (TString : s') -> (TString : s')
+                      _ -> [TError]     
+typeOf Drop         = \s -> case s of
+                           ( _ : s') -> s'             
+                           _ -> [TError]
+typeOf Swap         = \s -> case s of
+                           (a  : b  : s') -> (b : a : s')
+                           _ -> [TError]
+typeOf Over     = \s -> case s of
+                           (x : y : s') -> (x : y : x : s')
+                           _ -> [TError]
+typeOf Rot     = \s -> case s of
+                           (x : y : z : s') -> (y : z : x : s')
+                           _ -> [TError]
+
+typeprog :: Prog -> Tstack -> [Type]
+typeprog []    = \s -> if s == [TError] then error "type error occurs" else s
+typeprog (c:p) = \s -> case typeOf c s of
+                     [TError] -> error "type error occurs"
+                     s' -> typeprog p s'
+
+{-
 7. Input/output (2).
     This feature would enable reading and/or printing output from programs in your language. 
     This feature is tricky to implement in pure Haskell, but you can simulate it by extending your semantic domain with strings (or lists of strings) that represent input/output to/from your program.
