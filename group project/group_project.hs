@@ -264,7 +264,7 @@ extest3 = [PushN 3, Let("Test"), PushN 4, Let("Test2"), Smaller, Dup]
     For a stack-based language, it would ensure that the stack never underflows and that operations are always applied with values of the correct type on the stack; 
     for imperative and functional languages the type system would ensure that there are no type errors caused by applying an operation, function, or procedure to an argument of the wrong type.
 -}
-data Type = TBool | FBool | TInt | TString | TError
+data Type = TBool | FBool | TInt | TString | T (String, Type) | TError
   deriving (Eq,Show)
 type Tstack = [Type]
 
@@ -275,27 +275,60 @@ typeOf (PushS s)    = \s -> (TString : s)
 typeOf Add          = \s -> case s of
                       (TInt : TInt : s') -> (TInt : s')
                       (TString : TString : s') -> (TString : s')
+                      (T (n, TInt) : TInt : s') -> (TInt : T (n, TInt) : s')
+                      (TInt : T (n, TInt) : s') -> (T (n, TInt) : s')
+                      (T (n, TInt) : T (x, TInt) : s') -> (T (n, TInt) : T (x, TInt) : s')
+                      (T (n, TString) : TString : s') -> (TString : T (n, TString) : s')
+                      (TString : T (n, TString) : s') -> (T (n, TString) : s')
+                      (T (n, TString) : T (x, TString) : s') -> (T (n, TString) : T (x, TString) : s')
                       _ -> [TError]
 typeOf Sub          = \s -> case s of
                       (TInt : TInt : s') -> (TInt : s')
+                      (T (n, TInt) : TInt : s') -> (TInt : T (n, TInt) : s')
+                      (TInt : T (n, TInt) : s') -> (T (n, TInt) : s')
+                      (T (n, TInt) : T (x, TInt) : s') -> (T (n, TInt) : T (x, TInt) : s')    
                       _ -> [TError]
 typeOf Mul          = \s -> case s of
                       (TInt : TInt : s') -> (TInt : s')
+                      (T (n, TInt) : TInt : s') -> (TInt : T (n, TInt) : s')
+                      (TInt : T (n, TInt) : s') -> (T (n, TInt) : s')
+                      (T (n, TInt) : T (x, TInt) : s') -> (T (n, TInt) : T (x, TInt) : s')    
                       _ -> [TError]
 typeOf Equ          = \s -> case s of
-                      (TInt : TInt : s') -> (TBool : s')
+                      (TInt : TInt : s') -> (FBool : s')
                       (TBool : TBool : s') -> (TBool : s')
                       (TBool : FBool : s') -> (FBool : s')
                       (FBool : TBool : s') -> (FBool : s')
                       (FBool : FBool : s') -> (FBool : s')
-                      (TString : TString : s') -> (TBool : s')
+                      (TString : TString : s') -> (FBool : s')
+                      (T (n, TInt) : TInt : s') -> (FBool : T (n, TInt) : s')
+                      (TInt : T (n, TInt) : s') -> (FBool : T (n, TInt) : s')
+                      (T (n, TInt) : T (x, TInt) : s') -> (FBool : T (n, TInt) : T (x, TInt) : s')
+                      (T (n, TString) : TString : s') -> (FBool : T (n, TString) : s')
+                      (TString : T (n, TString) : s') -> (FBool : T (n, TString) : s')
+                      (T (n, TString) : T (x, TString) : s') -> (FBool : T (n, TString) : T (x, TString) : s')
                       _ -> [TError]
+typeOf Larger       = \s -> case s of
+                           (TInt  : TInt  : s') -> (FBool : s')
+                           (T (n, TInt) : TInt : s') -> (FBool : T (n, TInt) : s')
+                           (TInt : T (n, TInt) : s') -> (FBool : T (n, TInt) : s')
+                           (T (n, TInt) : T (x, TInt) : s') -> (FBool : T (n, TInt) : T (x, TInt) : s')
+                           _ -> [TError]
+typeOf Smaller      = \s -> case s of
+                           (TInt  : TInt  : s') -> (FBool : s')
+                           (T (n, TInt) : TInt : s') -> (FBool : T (n, TInt) : s')
+                           (TInt : T (n, TInt) : s') -> (FBool : T (n, TInt) : s')
+                           (T (n, TInt) : T (x, TInt) : s') -> (FBool : T (n, TInt) : T (x, TInt) : s')
+                           _ -> [TError]
 typeOf (Let n)      = \s -> case s of
-                      (TInt : s') -> (TInt : s')
-                      (TString : s') -> (TString : s')
-                      (TBool : s') -> (TBool : s')
-                      (FBool : s') -> (FBool : s')
-                      _ ->[TError]
+                      (TInt : s') -> (T (n, TInt) : s')
+                      (TString : s') -> (T (n, TString) : s')
+                      (TBool : s') -> (T (n, TBool) : s')
+                      (FBool : s') -> (T (n, FBool) : s')
+                      _ -> [TError]
+typeOf (Ref n)      = \s -> case (reverse s) of
+                        (T (name, v) : s') -> if (name == n) then (v : (reverse (T (name, v) : s'))) else if (findType n s') == TError then [TError] else ((findType n s') : reverse s')
+                        _ -> [TError]
 typeOf (IfElse t e) = \s -> case s of
                       (TBool: s') -> case (typeprog t s', typeprog e s') of
                                      (tt, te) -> if tt == te then if (tt /= [TError]) then (tt ++ s') else [TError] else [TError]
@@ -303,10 +336,20 @@ typeOf (IfElse t e) = \s -> case s of
 typeOf (Loop c r) = \s -> case s of
                         (TInt : s') -> case (typeprog c s', typeprog r s') of
                             (TBool : _ , x : _) -> (x : s')
+                            (T (n, TBool) : _ , x : _) -> (x : s')
                             (FBool : _ , x : _) -> (x : s')
+                            (T (n, FBool) : _ , x : _) -> (x : s')
+                            _ -> [TError]
+                        (T (_, TInt) : s') -> case (typeprog c s', typeprog r s') of
+                            (TBool : _ , x : _) -> (x : s')
+                            (T (n, TBool) : _ , x : _) -> (x : s')
+                            (FBool : _ , x : _) -> (x : s')
+                            (T (n, FBool) : _ , x : _) -> (x : s')
                             _ -> [TError]
                         (TBool : s') -> [TError]
+                        (T (n, TBool) : s') -> [TError]
                         (FBool : s') -> typeprog r s'
+                        (T (n, FBool) : s') -> typeprog r s'
                         _ -> [TError]
 typeOf Dup        = \s -> case s of
                       (TInt : s') -> (TInt : s')
@@ -326,6 +369,10 @@ typeOf Over     = \s -> case s of
 typeOf Rot     = \s -> case s of
                            (x : y : z : s') -> (y : z : x : s')
                            _ -> [TError]
+findType :: String -> Tstack -> Type
+findType n (s:s') = case s of
+                    T (name, v) -> if (name == n ) then v else findType n s'
+                    _ -> TError
 
 typeprog :: Prog -> Tstack -> [Type]
 typeprog []    = \s -> if s == [TError] then error "type error occurs" else s
@@ -333,6 +380,16 @@ typeprog (c:p) = \s -> case typeOf c s of
                      [TError] -> error "type error occurs"
                      s' -> typeprog p s'
 
+
+typeProgT :: Prog -> Tstack -> Bool
+typeProgT []    = \s -> if s == [TError] then False else True
+typeProgT (c:p) = \s -> case typeOf c s of
+                     [TError] -> False
+                     s' -> typeProgT p s'
+
+
+runProg :: Prog -> Maybe Stack
+runProg p = if typeProgT p [] then prog p [] else Nothing
 {-
 7. Input/output (2).
     This feature would enable reading and/or printing output from programs in your language. 
