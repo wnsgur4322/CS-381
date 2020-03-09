@@ -237,6 +237,9 @@ extest3 = [PushN 3, Let("Test"), PushN 4, Let("Test2"), Smaller, Dup]
 -- => Just [MiddleS "!worldhello"]
 -- Need a function to print String Correctly.
 -- Fixed!
+-- ex)
+-- run [PushS "String ", PushS "Test",  Add, PushS "Correct", Add]
+-- Just [MiddleS "String TestCorrect"]
 
 2. Tuples and operations (1).
     This feature would enable creating tuples of other values, such as (2,true). 
