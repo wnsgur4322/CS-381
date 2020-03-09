@@ -236,6 +236,7 @@ extest3 = [PushN 3, Let("Test"), PushN 4, Let("Test2"), Smaller, Dup]
 -- run [PushS "hello ", PushS "world", PushS "!", Add, Add]
 -- => Just [MiddleS "!worldhello"]
 -- Need a function to print String Correctly.
+-- Fixed!
 
 2. Tuples and operations (1).
     This feature would enable creating tuples of other values, such as (2,true). 
