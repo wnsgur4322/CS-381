@@ -511,3 +511,5 @@ runProg p = if typeProgT p [] then prog p [] else Nothing
     In your milestone submission, be clear about what feature you’re picking and how many points you think it should be worth. We’ll negotiate from there, if needed. 
     (Minor constraint: You must have at least one 2-point or higher feature. 
     In other words, you can’t just add another simple type of value to a language with strings and tuples and call it a day!) -}
+-- We can changea value which has a name by "Let" through "Bind" like a = 3; a = 5; => Result: a = 5.
+-- Also, through "Bind", we can do not only a = 3; a = 5;, also a = 3; b = 5; a = b; => Result : a = 5, b = 5.
