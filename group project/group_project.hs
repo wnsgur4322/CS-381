@@ -304,7 +304,7 @@ rec_fib n = rec_fib (n-1) ++ rec_fib(n-2) ++ [Add]
 
 -- iterative fibonacci umbers by 'Four' language
 itr_fib :: Int -> Prog
-itr_fib n = [PushN 0, Let("a"), PushN 1, Let("b"), PushN 0, Let("temp"), PushN 0, Let("i"), Loop [PushN n, Larger] [PushN 1, Add, Bind("temp", Ref ("a")), Bind("a", Ref ("b")), Ref ("temp"), Ref ("b"), Add, Let("c"), Bind("b",Ref("c")), Drop]]
+itr_fib n = [PushN 0, Let("a"), PushN 1, Let("b"), PushN 0, Let("temp"), PushN 1, Let("i"), Loop [PushN n, Larger] [PushN 1, Add, Bind("temp", Ref ("a")), Bind("a", Ref ("b")), Ref ("temp"), Ref ("b"), Add, Let("c"), Bind("b",Ref("c")), Drop], Drop, Drop, Drop]
 
 
 -- 4. Procedures/functions with arguments (or some other abstraction mechanism).
