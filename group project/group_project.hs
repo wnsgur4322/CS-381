@@ -150,24 +150,34 @@ cmd Over     = \s -> case s of
 cmd Rot     = \s -> case s of
                            (x : y : z : s') -> Just (y : z : x : s')
                            _ -> Nothing
-cmd (Let n) = \s -> if (cmd (Ref n) s) == Nothing then case s of -- Avoid duplicates varname.
-                            (LeftI i : s') -> Just (V (n, LeftI i) : s')
-                            (MiddleS str : s') -> Just (V (n, MiddleS str) : s')
-                            (RightB b : s') -> Just (V (n, RightB b) : s')
-                            _ -> Nothing
-                    else Nothing
-cmd (Ref n) = \s -> case reverse s of -- if you call 'reverse' again after it called once, the user should check the stack hasn't been changed
-                    (V (name, value) : s') -> if (name == n) then Just (value : (reverse (V (name, value) : s'))) else if (find n s') == FError then Nothing else Just ((find n s') : reverse s')
-                    _ -> Nothing
-cmd (Bind (n, v)) = \s -> case ((cmd (Ref n) s), (cmd v [])) of
-                            (Just (LeftI i:s'), Just [LeftI j]) -> if (findVar (n, LeftI j) (reverse s)) /= [FError] then Just (findVar (n, LeftI j) (reverse s)) else Nothing
-                            (Just (MiddleS i:s'), Just [MiddleS j]) -> if (findVar (n, MiddleS j) (reverse s)) /= [FError] then Just (findVar (n, MiddleS j) (reverse s)) else Nothing
-                            (Just (RightB i:s'), Just [RightB j]) -> if (findVar (n, RightB j) (reverse s)) /= [FError] then Just (findVar (n, RightB j) (reverse s)) else Nothing
-                            _ -> Nothing
+cmd (Let n) = \s -> case ((cmd (Ref n) s), s) of -- Avoid duplicates varname.
+                          (Nothing, (LeftI i : s')) -> Just (V (n, LeftI i) : s')
+                          (Nothing, (MiddleS str : s')) -> Just (V (n, MiddleS str) : s')
+                          (Nothing, (RightB b : s')) -> Just (V (n, RightB b) : s')
+                          _ -> Nothing
+cmd (Ref n) = \s -> case s of -- if you call 'reverse' again after it called once, the user should check the stack hasn't been changed
+                    (V (name, value) : s') -> if (name == n) then Just (value : V (name, value) : s') else if (find n s') == FError then Nothing else Just ((find n s) : s)
+                    [] -> Nothing
+                    _ -> if (find n s) == FError then Nothing else Just ((find n s) : s)
+cmd (Bind (n, v)) = \s -> case v of 
+                            (Ref t) -> case ((cmd (Ref n) s), (cmd (Ref t) s)) of
+                                        (Just (LeftI i:s'), Just (LeftI j:x')) -> if (findVar (n, LeftI j) (reverse s)) /= [FError] then Just (findVar (n, LeftI j) (reverse s)) else Nothing
+                                        (Just (MiddleS i:s'), Just (MiddleS j:x')) -> if (findVar (n, MiddleS j) (reverse s)) /= [FError] then Just (findVar (n, MiddleS j) (reverse s)) else Nothing
+                                        (Just (RightB i:s'), Just (RightB j:x')) -> if (findVar (n, RightB j) (reverse s)) /= [FError] then Just (findVar (n, RightB j) (reverse s)) else Nothing
+                                        _ -> Nothing
+                            _ -> case ((cmd (Ref n) s), (cmd v [])) of
+                                    (Just (LeftI i:s'), Just [LeftI j]) -> if (findVar (n, LeftI j) (reverse s)) /= [FError] then Just (findVar (n, LeftI j) (reverse s)) else Nothing
+                                    (Just (MiddleS i:s'), Just [MiddleS j]) -> if (findVar (n, MiddleS j) (reverse s)) /= [FError] then Just (findVar (n, MiddleS j) (reverse s)) else Nothing
+                                    (Just (RightB i:s'), Just [RightB j]) -> if (findVar (n, RightB j) (reverse s)) /= [FError] then Just (findVar (n, RightB j) (reverse s)) else Nothing
+                                    _ -> Nothing
 
 
 bindtest :: Prog
-bindtest = [PushN 3, Let("n"), PushN 4, Ref("n"), Bind(("n", PushN 4)), Ref("n")]
+bindtest = [PushN 3, Let("a"), PushN 4, Let("b"), Ref("a"), Ref("b"), Bind(("a", Ref("b"))), Ref("a")]
+bindtest2 :: Prog
+bindtest2 = [PushN 3, Let("a"), PushN 4, Let("b"), Ref("b"), Ref("a")]
+bindtest3 :: Prog
+bindtest3 = [PushN 3, Let("a"), PushN 4, Let("b"), Ref("a"), Ref("b"), Bind(("a", PushN 4)), Ref("a")]
 -- Result: Just [LeftI 4,LeftI 3,LeftI 4,V ("n",LeftI 4)]
 {-
 cmd (Bind (n, v)) = \s -> if (cmd (Ref n) s ) /= Nothing then case reverse s of
@@ -194,8 +204,8 @@ cmd (Bind (n, v)) = \s -> if (cmd (Ref n) s ) /= Nothing then case reverse s of
 -- helper function for Ref
 find :: Varname -> Stack -> Val
 find n (s:s') = case s of
-                V (name, v) -> if (name == n) then v else find n s'
-                _ -> FError
+                V (name, v) -> if (name == n) then v else if s' == [] then FError else find n s'
+                _ -> if s' == [] then FError else find n s'
 
 findVar :: Var -> Stack -> Stack
 findVar (n, v) (s:s') = case s of
