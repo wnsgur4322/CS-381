@@ -36,7 +36,7 @@ data Four_Cmd = PushN Int
          | Rot
          | Let Varname  -- Below : For Repeated functions and values
          | Ref Varname
-         | Bind (Varname, Stack_Cmd)
+         | Bind (Varname, Four_Cmd)
   deriving (Eq,Show)
 
 --
@@ -165,6 +165,10 @@ cmd (Bind (n, v)) = \s -> case ((cmd (Ref n) s), (cmd v [])) of
                             (Just (RightB i:s'), Just [RightB j]) -> if (findVar (n, RightB j) (reverse s)) /= [FError] then Just (findVar (n, RightB j) (reverse s)) else Nothing
                             _ -> Nothing
 
+
+bindtest :: Prog
+bindtest = [PushN 3, Let("n"), PushN 4, Ref("n"), Bind(("n", PushN 4)), Ref("n")]
+-- Result: Just [LeftI 4,LeftI 3,LeftI 4,V ("n",LeftI 4)]
 {-
 cmd (Bind (n, v)) = \s -> if (cmd (Ref n) s ) /= Nothing then case reverse s of
                             (V (name, LeftI value) : s') -> if (name == n) then case cmd v [] of
