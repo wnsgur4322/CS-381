@@ -250,31 +250,21 @@ run p = prog p []
 loop :: Val -> Prog -> Prog -> Stack -> Maybe Stack
 loop (V (n, LeftI v)) c r s' = case run ((PushN v):c) of
                             Just [RightB True] -> Just (V (n, LeftI v) : s')
-                            Just [RightB False] -> case (loophelp (V (n, LeftI v)) r) of
-                                                    V (n, v') -> loop (V (n, v')) c r s'
-                                                    FError -> Nothing
+                            Just [RightB False] -> case (loophelp (V (n, LeftI v)) r s') of
+                                                    [V (n, v')] -> loop (V (n, v')) c r s'
+                                                    (V (n, v'):x') -> loop (V (n, v')) c r (x')
+                                                    [FError] -> Nothing
                             _ -> Nothing
 
-loophelp :: Val -> Prog -> Val
-loophelp (V (n, LeftI v)) r = case run ((PushN v):r) of
-                    Just [LeftI b] -> V (n, LeftI b)
-                    _ -> FError
+loophelp :: Val -> Prog -> Stack -> Stack
+loophelp (V (n, LeftI v)) r s = case prog ((PushN v):r) s of
+                    Just [LeftI b] -> [V (n, LeftI b)]
+                    Just (LeftI b:s') -> (V (n, LeftI b):s')
+                    _ -> [FError]
 
-{-
-cmd (Loop c r)   = \s -> case s of -- it's while loop (not do-while)
-                           (LeftI i : s') -> if (i == 0) then Just s' else Nothing -- Infinity loop
-                           (MiddleS i : s') -> Nothing -- Infinity loop
-                           (RightB True : s') -> Nothing -- Infinity loop
-                           (RightB False : s') -> Just s'
-                           (V (n, MiddleS _) : s') -> Nothing -- String type can't be in condition.
-                           (V (n, RightB True) : s') -> Nothing
-                           (V (n, RightB False) : s') -> Just s'
-                           (V (n, LeftI v) : s') -> loop (V (n, LeftI v))  c  r  s'
-                           _ -> Nothing
--}
 
 exloop :: Prog
-exloop = [PushN 3, Let("Test"), Loop [PushN 5, Larger] [PushN 3, Add]]
+exloop = [PushN 4, Let("t"), PushN 3, Let("Test"), Loop [PushN 5, Larger] [PushN 1, Add]]
 
 -- example of language usage: make Fibonacci numbers function with 'Four'
 -- python ver.
@@ -314,8 +304,7 @@ rec_fib n = rec_fib (n-1) ++ rec_fib(n-2) ++ [Add]
 
 -- iterative fibonacci umbers by 'Four' language
 itr_fib :: Int -> Prog
-itr_fib n = [PushN 0, Let("a"), PushN 1, Let("b"), PushN 0, Let("temp"), PushN 0, Let("i"),
-            Loop [PushN n, Larger] [PushN 1, Add, Bind("temp", Ref ("a")), Bind("a", Ref ("b")), Ref ("temp"), Ref ("b"), Add, Let("c"), Bind("b", Ref ("c")), Drop]]
+itr_fib n = [PushN 0, Let("a"), PushN 1, Let("b"), PushN 0, Let("temp"), PushN 0, Let("i"), Loop [PushN n, Larger] [PushN 1, Add, Bind("temp", Ref ("a")), Bind("a", Ref ("b")), Ref ("temp"), Ref ("b"), Add, Let("c"), Bind("b",Ref("c")), Drop]]
 
 
 -- 4. Procedures/functions with arguments (or some other abstraction mechanism).
