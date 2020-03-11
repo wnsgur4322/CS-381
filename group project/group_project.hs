@@ -3,7 +3,7 @@
 -- Youngjoo Lee, leey3@oregonstate.edu
 -- Ethan Mendelson, mendelse@oregonstate.edu
 
-module StackProject where
+module Four where
 import Prelude hiding (Num)
 
 {- Feature menu
@@ -14,11 +14,11 @@ When designing your language, you must include some version of all of the follow
 
 --
 -- *Abstract Syntax of Four
-type Prog = [Stack_Cmd]
+type Prog = [Four_Cmd]
 type Varname = String
 type Var = (Varname, Val)
 
-data Stack_Cmd = PushN Int
+data Four_Cmd = PushN Int
          | PushB Bool
          | PushS String
          | Add
@@ -56,10 +56,10 @@ data Stack_Cmd = PushN Int
 -- | Values.
 data Val
    = LeftI Int                 -- integer
-   | RightB Bool
-   | MiddleS String
-   | V Var
-   | FError
+   | RightB Bool               -- Bool
+   | MiddleS String            -- String
+   | V Var                     -- Var
+   | FError                    -- Error
   deriving (Eq,Show)
 
 
@@ -69,7 +69,7 @@ type Domain = Stack -> Maybe Stack
 
 
 -- Define the semantics of a StackLang command (ignore If at first).
-cmd :: Stack_Cmd -> Domain
+cmd :: Four_Cmd -> Domain
 cmd (PushN i)    = \s -> Just (LeftI i : s)
 cmd (PushB b)    = \s -> Just (RightB b : s)
 cmd (PushS str)  = \s -> Just (MiddleS str : s)
@@ -155,7 +155,7 @@ cmd (Let n) = \s -> if (cmd (Ref n) s) == Nothing then case s of -- Avoid duplic
                             (RightB b : s') -> Just (V (n, RightB b) : s')
                             _ -> Nothing
                     else Nothing
-cmd (Ref n) = \s -> case reverse s of -- reverse하고나서 다시 reverse했을때 스택이 그대로인지 확인필요!!!!!
+cmd (Ref n) = \s -> case reverse s of -- if you call 'reverse' again after it called once, the user should check the stack hasn't been changed
                     (V (name, value) : s') -> if (name == n) then Just (value : (reverse (V (name, value) : s'))) else if (find n s') == FError then Nothing else Just ((find n s') : reverse s')
                     _ -> Nothing
 
@@ -190,7 +190,10 @@ run p = prog p []
 -- 2. Conditionals.
 -- You should provide some way to branch in your language (e.g. if-then-else).
 -- The condtion (which treats string, bool, and integer types) is defined in above cmd (IfElse)
-
+-- cmd (IfElse t e) = \s -> case s of
+--                            (RightB True  : s') -> prog t s'
+--                            (RightB False : s') -> prog e s'
+--                            _ -> Nothing
 
 
 -- 3. Recursion/loops. 
@@ -209,10 +212,43 @@ loophelp (V (n, LeftI v)) r = case run ((PushN v):r) of
                     Just [LeftI b] -> V (n, LeftI b)
                     _ -> FError
 
-
+{-
+cmd (Loop c r)   = \s -> case s of -- it's while loop (not do-while)
+                           (LeftI i : s') -> if (i == 0) then Just s' else Nothing -- Infinity loop
+                           (MiddleS i : s') -> Nothing -- Infinity loop
+                           (RightB True : s') -> Nothing -- Infinity loop
+                           (RightB False : s') -> Just s'
+                           (V (n, MiddleS _) : s') -> Nothing -- String type can't be in condition.
+                           (V (n, RightB True) : s') -> Nothing
+                           (V (n, RightB False) : s') -> Just s'
+                           (V (n, LeftI v) : s') -> loop (V (n, LeftI v))  c  r  s'
+                           _ -> Nothing
+-}
 
 exloop :: Prog
-exloop = [PushN 2, Let("Test"), Loop [PushN 5, Larger] [PushN 1, Add]]
+exloop = [PushN 3, Let("Test"), Loop [PushN 5, Larger] [PushN 3, Add]]
+
+-- example of language usage: make Fibonacci numbers function with 'Four'
+-- python ver
+{-
+def fibonacci(n):
+    a = 0
+    b = 1
+    for i in range(0, n):
+        temp = a
+        a = b
+        b = temp + b
+    return a
+-}
+fib2 :: Int -> Int
+fib2 0 = 0
+fib2 1 = 1
+fib2 n = fib2 (n-1) + fib2 (n-2)
+
+fib :: Int -> Prog
+fib 0 = [PushN 0, Let("fib")]
+fib 1 = [PushN 1, Let("fib")]
+fib n = [PushN n, Let("fib"), Loop [PushN 1, Smaller] [PushN 1, Sub], PushN 1, PushN 0, Add]
 
 -- 4. Procedures/functions with arguments (or some other abstraction mechanism).
 --    You should provide a way to factor out repeated code and give it a name so that it can be reused. 
@@ -268,7 +304,7 @@ data Type = TBool | FBool | TInt | TString | T (String, Type) | TError
   deriving (Eq,Show)
 type Tstack = [Type]
 
-typeOf :: Stack_Cmd -> Tstack -> [Type]
+typeOf :: Four_Cmd -> Tstack -> [Type]
 typeOf (PushN i)    = \s -> (TInt : s)
 typeOf (PushB b)    = \s -> if b == True then (TBool : s) else (FBool : s)
 typeOf (PushS s)    = \s -> (TString : s)
