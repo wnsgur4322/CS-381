@@ -288,12 +288,13 @@ def fibonacci(n):
         b = temp + b
     return a
 -}
+-- recursive fibonacci by original haskell
 fib2 :: Int -> Int
 fib2 0 = 0
 fib2 1 = 1
 fib2 n = fib2 (n-1) + fib2 (n-2)
 
--- recursive fibonacci numbers 
+-- recursive fibonacci numbers by 'Four' language
 rec_fib :: Int -> Prog
 rec_fib 0 = [PushN 0]
 rec_fib 1 = [PushN 0, PushN 1, Add]
