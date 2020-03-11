@@ -277,7 +277,7 @@ exloop :: Prog
 exloop = [PushN 3, Let("Test"), Loop [PushN 5, Larger] [PushN 3, Add]]
 
 -- example of language usage: make Fibonacci numbers function with 'Four'
--- python ver
+-- python ver.
 {-
 def fibonacci(n):
     a = 0
@@ -287,6 +287,18 @@ def fibonacci(n):
         a = b
         b = temp + b
     return a
+
+-- c++ ver.
+def cpp_fib(n){
+    int a,b = 0,1;
+    int temp;
+    for (int i =0; i<n; i++;){
+        temp = a;
+        a = b;
+        b = temp +b;
+    }
+    return a
+}
 -}
 -- recursive fibonacci by original haskell
 fib2 :: Int -> Int
@@ -299,7 +311,12 @@ rec_fib :: Int -> Prog
 rec_fib 0 = [PushN 0]
 rec_fib 1 = [PushN 0, PushN 1, Add]
 rec_fib n = rec_fib (n-1) ++ rec_fib(n-2) ++ [Add]
--- fib n = [PushN 0, Let("a"), PushN 1, Let("b"), PushN n, Let("fib"), Loop [PushN 1, Smaller,Ref("a"), Bind("temp", "a"), Ref("b")] [PushN 1, Sub]]
+
+-- iterative fibonacci umbers by 'Four' language
+itr_fib :: Int -> Prog
+itr_fib n = [PushN 0, Let("a"), PushN 1, Let("b"), PushN 0, Let("temp"), PushN 0, Let("i"),
+            Loop [PushN n, Larger] [PushN 1, Add, Bind("temp", Ref ("a")), Bind("a", Ref ("b")), Ref ("temp"), Ref ("b"), Add, Let("c"), Bind("b", Ref ("c")), Drop]]
+
 
 -- 4. Procedures/functions with arguments (or some other abstraction mechanism).
 --    You should provide a way to factor out repeated code and give it a name so that it can be reused. 
@@ -511,5 +528,5 @@ runProg p = if typeProgT p [] then prog p [] else Nothing
     In your milestone submission, be clear about what feature you’re picking and how many points you think it should be worth. We’ll negotiate from there, if needed. 
     (Minor constraint: You must have at least one 2-point or higher feature. 
     In other words, you can’t just add another simple type of value to a language with strings and tuples and call it a day!) -}
--- We can changea value which has a name by "Let" through "Bind" like a = 3; a = 5; => Result: a = 5.
+-- We can change a value which has a name by "Let" through "Bind" like a = 3; a = 5; => Result: a = 5.
 -- Also, through "Bind", we can do not only a = 3; a = 5;, also a = 3; b = 5; a = b; => Result : a = 5, b = 5.

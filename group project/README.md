@@ -79,3 +79,10 @@ list of examples:
 
 > ex_rotbad
 >> Expected output: Nothing
+
+> The language usage examples
+-- recursive fibonacci numbers by 'Four' language
+rec_fib :: Int -> Prog
+rec_fib 0 = [PushN 0]
+rec_fib 1 = [PushN 0, PushN 1, Add]
+rec_fib n = rec_fib (n-1) ++ rec_fib(n-2) ++ [Add]
