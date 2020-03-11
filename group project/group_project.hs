@@ -36,6 +36,7 @@ data Stack_Cmd = PushN Int
          | Rot
          | Let Varname  -- Below : For Repeated functions and values
          | Ref Varname
+         | Bind (Varname, Stack_Cmd)
   deriving (Eq,Show)
 
 --
@@ -158,12 +159,45 @@ cmd (Let n) = \s -> if (cmd (Ref n) s) == Nothing then case s of -- Avoid duplic
 cmd (Ref n) = \s -> case reverse s of -- reverse하고나서 다시 reverse했을때 스택이 그대로인지 확인필요!!!!!
                     (V (name, value) : s') -> if (name == n) then Just (value : (reverse (V (name, value) : s'))) else if (find n s') == FError then Nothing else Just ((find n s') : reverse s')
                     _ -> Nothing
+cmd (Bind (n, v)) = \s -> case ((cmd (Ref n) s), (cmd v [])) of
+                            (Just (LeftI i:s'), Just [LeftI j]) -> if (findVar (n, LeftI j) (reverse s)) /= [FError] then Just (findVar (n, LeftI j) (reverse s)) else Nothing
+                            (Just (MiddleS i:s'), Just [MiddleS j]) -> if (findVar (n, MiddleS j) (reverse s)) /= [FError] then Just (findVar (n, MiddleS j) (reverse s)) else Nothing
+                            (Just (RightB i:s'), Just [RightB j]) -> if (findVar (n, RightB j) (reverse s)) /= [FError] then Just (findVar (n, RightB j) (reverse s)) else Nothing
+                            _ -> Nothing
+
+{-
+cmd (Bind (n, v)) = \s -> if (cmd (Ref n) s ) /= Nothing then case reverse s of
+                            (V (name, LeftI value) : s') -> if (name == n) then case cmd v [] of
+                                                                            Just [LeftI i] -> Just (reverse (V (name, LeftI i) : s')) 
+                                                                            _ -> Nothing
+                                                            else if (find n s') == FError then Nothing 
+                                                            else Just (findVar (n, v) s)
+
+                            (V (name, MiddleS value) : s') -> if (name == n) then case cmd v [] of
+                                                                            Just [MiddleS i] -> Just (reverse (V (name, MiddleS i) : s')) 
+                                                                            _ -> Nothing
+                                                            else if (find n s') == FError then Nothing 
+                                                            else Just (findVar (n, v) s)
+                            (V (name, RightB value) : s') -> if (name == n) then case cmd v [] of
+                                                                            Just [RightB i] -> Just (reverse (V (name, RightB i) : s')) 
+                                                                            _ -> Nothing
+                                                            else if (find n s') == FError then Nothing 
+                                                            else Just (findVar (n, v) s)
+                            _ -> Nothing
+                          else Nothing
+-}
 
 -- helper function for Ref
 find :: Varname -> Stack -> Val
 find n (s:s') = case s of
                 V (name, v) -> if (name == n) then v else find n s'
                 _ -> FError
+
+findVar :: Var -> Stack -> Stack
+findVar (n, v) (s:s') = case s of
+                        (V (name, value)) -> if (name == n) then (reverse (V (name, v) : s')) 
+                                             else ((findVar (n, v) s') ++ [s])
+                        _ -> ((findVar (n, v) s') ++ [s])
 
 -- Define the semantics
 prog :: Prog -> Domain
@@ -369,6 +403,20 @@ typeOf Over     = \s -> case s of
 typeOf Rot     = \s -> case s of
                            (x : y : z : s') -> (y : z : x : s')
                            _ -> [TError]
+typeOf (Bind (n, v)) = \s -> case ((typeOf (Ref n) s), (typeOf v [])) of
+                            ((TInt:s'), [TInt]) -> findTypeVar (T (n, TInt)) (reverse s)
+                            ((TString:s'), [TString]) -> findTypeVar (T (n, TString)) (reverse s)
+                            ((TBool:s'), [TBool]) -> findTypeVar (T (n, TBool)) (reverse s)
+                            ((TBool:s'), [FBool]) -> findTypeVar (T (n, FBool)) (reverse s)
+                            ((FBool:s'), [FBool]) -> findTypeVar (T (n, FBool)) (reverse s)
+                            ((FBool:s'), [TBool]) -> findTypeVar (T (n, TBool)) (reverse s)
+                            _ -> [TError]
+
+findTypeVar :: Type -> Tstack -> [Type]
+findTypeVar (T (n, v)) (s:s') = case s of
+                        (T (name, value)) -> if (name == n) then (reverse (T (name, v) : s')) 
+                                             else ((findTypeVar (T (n, v)) s') ++ [s])
+                        _ -> ((findTypeVar (T (n, v)) s') ++ [s])
 findType :: String -> Tstack -> Type
 findType n (s:s') = case s of
                     T (name, v) -> if (name == n ) then v else findType n s'
