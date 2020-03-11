@@ -211,7 +211,7 @@ findVar :: Var -> Stack -> Stack
 findVar (n, v) (s:s') = case s of
                         (V (name, value)) -> if (name == n) then (reverse (V (name, v) : s')) 
                                              else ((findVar (n, v) s') ++ [s])
-                        _ -> ((findVar (n, v) s') ++ [s])
+                        _ -> if s' == [] then [FError] else ((findVar (n, v) s') ++ [s])
 
 -- Define the semantics
 prog :: Prog -> Domain
@@ -404,15 +404,16 @@ typeOf Smaller      = \s -> case s of
                            (TInt : T (n, TInt) : s') -> (FBool : T (n, TInt) : s')
                            (T (n, TInt) : T (x, TInt) : s') -> (FBool : T (n, TInt) : T (x, TInt) : s')
                            _ -> [TError]
-typeOf (Let n)      = \s -> case s of
-                      (TInt : s') -> (T (n, TInt) : s')
-                      (TString : s') -> (T (n, TString) : s')
-                      (TBool : s') -> (T (n, TBool) : s')
-                      (FBool : s') -> (T (n, FBool) : s')
+typeOf (Let n)      = \s -> case ((typeOf (Ref n) s), s) of
+                      ([TError], (TInt : s')) -> (T (n, TInt) : s')
+                      ([TError], (TString : s')) -> (T (n, TString) : s')
+                      ([TError], (TBool : s')) -> (T (n, TBool) : s')
+                      ([TError], (FBool : s')) -> (T (n, FBool) : s')
                       _ -> [TError]
-typeOf (Ref n)      = \s -> case (reverse s) of
-                        (T (name, v) : s') -> if (name == n) then (v : (reverse (T (name, v) : s'))) else if (findType n s') == TError then [TError] else ((findType n s') : reverse s')
-                        _ -> [TError]
+typeOf (Ref n)      = \s -> case s of
+                        (T (name, v) : s') -> if (name == n) then (v : T (name, v) : s') else if (findType n s') == TError then [TError] else ((findType n s') : s)
+                        [] -> [TError]
+                        _ -> if (findType n s) == TError then [TError] else ((findType n s) : s)
 typeOf (IfElse t e) = \s -> case s of
                       (TBool: s') -> case (typeprog t s', typeprog e s') of
                                      (tt, te) -> if tt == te then if (tt /= [TError]) then (tt ++ s') else [TError] else [TError]
@@ -453,24 +454,33 @@ typeOf Over     = \s -> case s of
 typeOf Rot     = \s -> case s of
                            (x : y : z : s') -> (y : z : x : s')
                            _ -> [TError]
-typeOf (Bind (n, v)) = \s -> case ((typeOf (Ref n) s), (typeOf v [])) of
-                            ((TInt:s'), [TInt]) -> findTypeVar (T (n, TInt)) (reverse s)
-                            ((TString:s'), [TString]) -> findTypeVar (T (n, TString)) (reverse s)
-                            ((TBool:s'), [TBool]) -> findTypeVar (T (n, TBool)) (reverse s)
-                            ((TBool:s'), [FBool]) -> findTypeVar (T (n, FBool)) (reverse s)
-                            ((FBool:s'), [FBool]) -> findTypeVar (T (n, FBool)) (reverse s)
-                            ((FBool:s'), [TBool]) -> findTypeVar (T (n, TBool)) (reverse s)
-                            _ -> [TError]
+typeOf (Bind (n, v)) = \s -> case v of
+                                (Ref t) -> case ((typeOf (Ref n) s), (typeOf (Ref t) s)) of
+                                                ((TInt:s'), (TInt:x')) -> findTypeVar (T (n, TInt)) (reverse s)
+                                                ((TString:s'), (TString:x')) -> findTypeVar (T (n, TString)) (reverse s)
+                                                ((TBool:s'), (TBool:x')) -> findTypeVar (T (n, TBool)) (reverse s)
+                                                ((TBool:s'), (FBool:x')) -> findTypeVar (T (n, FBool)) (reverse s)
+                                                ((FBool:s'), (FBool:x')) -> findTypeVar (T (n, FBool)) (reverse s)
+                                                ((FBool:s'), (TBool:x')) -> findTypeVar (T (n, TBool)) (reverse s)
+                                                _ -> [TError]   
+                                _ -> case ((typeOf (Ref n) s), (typeOf v [])) of
+                                                ((TInt:s'), [TInt]) -> findTypeVar (T (n, TInt)) (reverse s)
+                                                ((TString:s'), [TString]) -> findTypeVar (T (n, TString)) (reverse s)
+                                                ((TBool:s'), [TBool]) -> findTypeVar (T (n, TBool)) (reverse s)
+                                                ((TBool:s'), [FBool]) -> findTypeVar (T (n, FBool)) (reverse s)
+                                                ((FBool:s'), [FBool]) -> findTypeVar (T (n, FBool)) (reverse s)
+                                                ((FBool:s'), [TBool]) -> findTypeVar (T (n, TBool)) (reverse s)
+                                                _ -> [TError]
 
 findTypeVar :: Type -> Tstack -> [Type]
 findTypeVar (T (n, v)) (s:s') = case s of
                         (T (name, value)) -> if (name == n) then (reverse (T (name, v) : s')) 
                                              else ((findTypeVar (T (n, v)) s') ++ [s])
-                        _ -> ((findTypeVar (T (n, v)) s') ++ [s])
+                        _ -> if s' == [] then [TError] else ((findTypeVar (T (n, v)) s') ++ [s])
 findType :: String -> Tstack -> Type
 findType n (s:s') = case s of
-                    T (name, v) -> if (name == n ) then v else findType n s'
-                    _ -> TError
+                    T (name, v) -> if (name == n ) then v else if s' == [] then TError else findType n s'
+                    _ -> if s' == [] then TError else findType n s'
 
 typeprog :: Prog -> Tstack -> [Type]
 typeprog []    = \s -> if s == [TError] then error "type error occurs" else s
