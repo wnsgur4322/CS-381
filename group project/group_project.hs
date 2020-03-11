@@ -293,10 +293,12 @@ fib2 0 = 0
 fib2 1 = 1
 fib2 n = fib2 (n-1) + fib2 (n-2)
 
-fib :: Int -> Prog
-fib 0 = [PushN 0, Let("fib")]
-fib 1 = [PushN 1, Let("fib")]
-fib n = [PushN n, Let("fib"), Loop [PushN 1, Smaller] [PushN 1, Sub], PushN 1, PushN 0, Add]
+-- recursive fibonacci numbers 
+rec_fib :: Int -> Prog
+rec_fib 0 = [PushN 0]
+rec_fib 1 = [PushN 0, PushN 1, Add]
+rec_fib n = rec_fib (n-1) ++ rec_fib(n-2) ++ [Add]
+-- fib n = [PushN 0, Let("a"), PushN 1, Let("b"), PushN n, Let("fib"), Loop [PushN 1, Smaller,Ref("a"), Bind("temp", "a"), Ref("b")] [PushN 1, Sub]]
 
 -- 4. Procedures/functions with arguments (or some other abstraction mechanism).
 --    You should provide a way to factor out repeated code and give it a name so that it can be reused. 
