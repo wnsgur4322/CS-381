@@ -126,7 +126,7 @@ add_helper :: Stack -> Maybe Stack
 add_helper = \s -> case s of
                 (LeftI i : LeftI j : s') -> Just (LeftI (i+j) : s')
                 (MiddleS x : MiddleS y : s') -> Just (MiddleS (y++x) : s')
-                (V (n, LeftI i) : LeftI j : s') -> Just (LeftI (i+j) : V (n, LeftI j) : s')
+                (V (n, LeftI i) : LeftI j : s') -> Just (LeftI (i+j) : V (n, LeftI i) : s')
                 (LeftI i : V (n, LeftI j) : s') -> Just (V (n, LeftI (i+j)) : s')
                 (V (n, LeftI i) : V (x, LeftI j) : s') -> Just (V (n, LeftI (i)) : V (x, LeftI (i+j)) : s')
                 (V (n, MiddleS i) : MiddleS j : s') -> Just (MiddleS (j++i) : V (n, MiddleS j) : s')
