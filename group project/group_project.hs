@@ -349,7 +349,7 @@ itr_fib n = [PushN 0, Let("a"), PushN 1, Let("b"), PushN 0, Let("temp"), PushN 1
 {-
 def factorial(n):
     fact = 1
-    for i in range(0, n):
+    for i in range(1, n):
         fact = fact * i
         
     return fact
@@ -357,17 +357,19 @@ def factorial(n):
 -- c++ ver.
 def cpp_factorial(n){
     int fact = 1;
-    for (int i =0; i<n; i++;){
+    for (int i =1; i<n; i++;){
         fact = fact * i;
     }
     return fact
 }
 -}
 factorial :: Int -> Prog
-factorial n = [PushN 1, Let("fact"), 
-              PushN 1, Let("i"), Loop [PushN n, Larger] [PushN 1, Add, Ref ("fact"), Ref ("i"), Mul, Let("mul"), Bind("fact", Ref ("mul")), Drop]]
+factorial n = [PushN 1, Let("fact"), PushN 1, Let("temp"),
+              PushN 1, Let("i"), Loop [PushN n, Larger] [PushN 1, Add, Bind("temp", Ref("i")), Ref ("fact"), Ref ("temp"), Mul, Let("mul"), Bind("fact", Ref ("mul")), Drop]]
 
-
+factorial2 :: Int -> Prog
+factorial2 n = [PushN 1, Let("fact"), PushN 1, Let ("temp"),
+              PushN 1, Let("i"), Loop [PushN n, Larger] [PushN 1, Add, Ref ("temp"), PushN 1, Add, Let ("temp2"), Bind("temp", Ref ("temp2")), Ref ("fact"), Ref ("temp"), Mul, Let("mul"), Bind("fact", Ref ("mul")), Drop]]
 
 -- 4. Procedures/functions with arguments (or some other abstraction mechanism).
 --    You should provide a way to factor out repeated code and give it a name so that it can be reused. 
