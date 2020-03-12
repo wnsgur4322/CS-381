@@ -33,18 +33,6 @@ List of Examples
 
 ## Conditions Example
 **Description:** This example generates final grades with your score (Integer n). Depends on your grade (n), it will generate 'A' to 'F' based on standard grading ranges (A >= 93, A >= 90, B+ >= 87, B >= 83, B- >= 80, C+ >= 77, C >= 73, C- >= 70, D >= 60, F < 60)  
--- Grading condtions by 'Four' language
-grades :: Int -> Prog
-grades n = [PushN n, Let("score"), PushN 92, Larger, IfElse [PushS "A"] 
-           [Ref ("score"), PushN 89, Larger, IfElse [PushS "A-"] 
-           [Ref ("score"), PushN 86, Larger, IfElse [PushS "B+"] 
-           [Ref ("score"), PushN 82, Larger, IfElse [PushS "B"] 
-           [Ref ("score"), PushN 79, Larger, IfElse [PushS "B-"]
-           [Ref ("score"), PushN 76, Larger, IfElse [PushS "C+"]
-           [Ref ("score"), PushN 72, Larger, IfElse [PushS "C"]
-           [Ref ("score"), PushN 69, Larger, IfElse [PushS "C-"]
-           [Ref ("score"), PushN 59, Larger, IfElse [PushS "D-"]
-           [PushS "F"]]]]]]]]], Let ("result")]
 
 #### Good Examples
 > runProg grades 81
@@ -69,19 +57,10 @@ grades n = [PushN n, Let("score"), PushN 92, Larger, IfElse [PushS "A"]
 #### Good Examples
 
 -- recursive fibonacci numbers by 'Four' language
-rec_fib :: Int -> Prog
-rec_fib 0 = [PushN 0]
-rec_fib 1 = [PushN 0, PushN 1, Add]
-rec_fib n = rec_fib (n-1) ++ rec_fib(n-2) ++ [Add]
-
 > run (rec_fib 6)
 >> Expected output: Just [LeftI 8]
 
 -- iterative fibonacci numbers by 'Four' language
-itr_fib :: Int -> Prog
-itr_fib n = [PushN 0, Let("a"), PushN 1, Let("b"), PushN 0, Let("temp"), PushN 1, Let("i"), 
-            Loop [PushN n, Larger] [PushN 1, Add, Bind("temp", Ref ("a")), Bind("a", Ref ("b")), Ref ("temp"), Ref ("b"), Add, Let("c"), Bind("b",Ref("c")), Drop], Drop, Drop, Drop]
-
 > runProg (itr_fib 6)
 >> Expected output: Just [LeftI 8]
 
