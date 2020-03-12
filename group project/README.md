@@ -151,7 +151,7 @@ List of Examples
 
 
 
-<U>### List/array data type and operations Example</U>
+### List/array data type and operations Example
 **Description:** This example generates 
 
 #### Good Examples
