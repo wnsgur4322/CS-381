@@ -31,66 +31,43 @@ How to run examples
 List of Examples
 -------------
 
-### Conditions Example
-**Description:** This example generates 
+## Conditions Example
+**Description:** This example generates final grades with your score (Integer n). Depends on your grade (n), it will generate 'A' to 'F' based on standard grading ranges (A >= 93, A >= 90, B+ >= 87, B >= 83, B- >= 80, C+ >= 77, C >= 73, C- >= 70, D >= 60, F < 60)  
+-- Grading condtions by 'Four' language
+grades :: Int -> Prog
+grades n = [PushN n, Let("score"), PushN 92, Larger, IfElse [PushS "A"] 
+           [Ref ("score"), PushN 89, Larger, IfElse [PushS "A-"] 
+           [Ref ("score"), PushN 86, Larger, IfElse [PushS "B+"] 
+           [Ref ("score"), PushN 82, Larger, IfElse [PushS "B"] 
+           [Ref ("score"), PushN 79, Larger, IfElse [PushS "B-"]
+           [Ref ("score"), PushN 76, Larger, IfElse [PushS "C+"]
+           [Ref ("score"), PushN 72, Larger, IfElse [PushS "C"]
+           [Ref ("score"), PushN 69, Larger, IfElse [PushS "C-"]
+           [Ref ("score"), PushN 59, Larger, IfElse [PushS "D-"]
+           [PushS "F"]]]]]]]]], Let ("result")]
+
 #### Good Examples
-> runProg exgood_conditions
->> Expected output: Just [Four ("x",PushVN 4)]
+> runProg grades 81
+>> Expected output: Just [V ("result",MiddleS "B-"),V ("score",LeftI 81)]
+
+> runProg grades 97
+>> Expected output: Just [V ("result",MiddleS "A"),V ("score",LeftI 97)]
+
 
 #### Bad Examples
-> runProg exbad_conditions
->> Expected output: Nothing
+> runProg grades "A"
+>> Expected output: Error
+>> Reason: The input of grades can't be String because string isn't Integer value. Therefore, it occurs "Type error".
 
-> runProg exbad_conditions2
->> Expected output: Nothing
+> runProg grades 83.5
+>> Expected output: Error
+>> Reason: Our language can't handle "Float" and "Double" types which includes decimal points. Therefore, it occurs "Type error"
 
 
-> ex_ifbad2
->> Expected output: Nothing
+## Recursion/loops Example
+**Description:** This example generates Fibonacci numbers with specific number of 'n'. We made two functions which can simply generate Fibonacci numbers on the screen with two diffent ways (recursive / iterative).
+#### Good Examples
 
-> exloop_good1
->> Expected output: Just [Four ("LoopGood1",PushVN 6)]
-
-> exloop_good2
->> Expected output: Just [Four ("LoopGood2",PushVN 1)]
-
-> exloop_bad1
->> Expected output: Nothing
-
-> exloop_bad2
->> Expected output: Nothing
-
-> ex_dupgood
->> Expected output: Just [LeftI 4,LeftI 4]
-
-> ex_dupbad
->> Expected output: Nothing
-
-> ex_dropgood
->> Expected output: Just [LeftI 4]
-
-> ex_dropbad
->> Expected output: Nothing
-
-> ex_swapgood
->> Expected output: Just [LeftI 4,MiddleS "First"]
-
-> ex_swapbad
->> Expected output: Nothing
-
-> ex_overgood
->> Expected output: Just [MiddleS "First",LeftI 4,MiddleS "First"]
-
-> ex_overbad
->> Expected output: Nothing
-
-> ex_rotgood
->> Expected output: Just [LeftI 2,LeftI 1,LeftI 3]
-
-> ex_rotbad
->> Expected output: Nothing
-
-> The language usage examples
 -- recursive fibonacci numbers by 'Four' language
 rec_fib :: Int -> Prog
 rec_fib 0 = [PushN 0]
@@ -105,8 +82,16 @@ itr_fib :: Int -> Prog
 itr_fib n = [PushN 0, Let("a"), PushN 1, Let("b"), PushN 0, Let("temp"), PushN 1, Let("i"), 
             Loop [PushN n, Larger] [PushN 1, Add, Bind("temp", Ref ("a")), Bind("a", Ref ("b")), Ref ("temp"), Ref ("b"), Add, Let("c"), Bind("b",Ref("c")), Drop], Drop, Drop, Drop]
 
-> run (itr_fib 6)
->> Expected output: Just [V ("a", LeftI 8)]
+> runProg (itr_fib 6)
+>> Expected output: Just [LeftI 8]
+
+#### Bad Examples
+
+
+
+
+> The language usage examples
+
 
 -- factorial calculation by 'Four' language
 factorial :: Int -> Prog
