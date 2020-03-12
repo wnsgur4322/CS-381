@@ -10,14 +10,18 @@ Team members
 
 
 
-Four is a stack-based language with four input types
+Introduction
 -------------
-> (Integer, Bool, String, and Name with each type). 
+> Four is a stack-based language with four input types for constructing and calculating mathmatical problems (Integer, Bool, String, and Name with each type). 
 
 
 
-To run examples => run <example names> after "ghci group_project.hs"
+To run examples => runProg <example names> after "ghci group_project.hs"
 -------------
+
+Example lists
+-------------
+
 > Ex) run ex_ifgood1
   
 > Ex) run exloop_good1
@@ -26,14 +30,20 @@ To run examples => run <example names> after "ghci group_project.hs"
 
 list of examples:
 -------------
-> ex_ifgood1
+
+### Conditions Example
+**Description:** This example generates 
+#### Good Examples
+> runProg exgood_conditions
 >> Expected output: Just [Four ("x",PushVN 4)]
 
-> ex_ifgood2
->> Expected output: Just [RightB True]
-
-> ex_ifbad1
+#### Bad Examples
+> runProg exbad_conditions
 >> Expected output: Nothing
+
+> runProg exbad_conditions2
+>> Expected output: Nothing
+
 
 > ex_ifbad2
 >> Expected output: Nothing
