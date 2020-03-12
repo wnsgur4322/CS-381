@@ -31,7 +31,7 @@ How to run examples
 List of Examples
 -------------
 
-## Conditions Example
+### Conditions Example
 **Description:** This example generates final grades with your score (Integer n). Depends on your grade (n), it will generate 'A' to 'F' based on standard grading ranges (A >= 93, A >= 90, B+ >= 87, B >= 83, B- >= 80, C+ >= 77, C >= 73, C- >= 70, D >= 60, F < 60)  
 
 #### Good Examples
@@ -54,7 +54,7 @@ List of Examples
 >> Reason: Our language can't handle "Float" and "Double" types which includes decimal points. Therefore, it occurs "Type error"
 
 
-## Recursion/loops Example
+### Recursion/loops Example
 **Description:** This example generates Fibonacci numbers with specific number of 'n'. We made two functions which can simply generate Fibonacci numbers on the screen with two diffent ways (recursive / iterative).
 #### Good Examples
 
@@ -79,7 +79,7 @@ List of Examples
 >> Reason: Our language can't handle "Float" and "Double" types which includes decimal points. Therefore, it occurs "Type error"
 
 
-## Procedures/functions with arguments Example
+### Procedures/functions with arguments Example
 **Description:** This example generates Factorial numbers using reused value through calling its name by "Ref". In "factorial" function, it used "Ref" to use its value without name to refer to its value to calculate factorial numbers with 'n'
 
 (Ref only can be used for 'V (name, value) which has value name with its value')
@@ -104,7 +104,7 @@ List of Examples
 >> Reason: Our language can't handle "Float" and "Double" types which includes decimal points. Therefore, it occurs "Type error"
 
 
-## Stack manipulation operations Example
+### Stack manipulation operations Example
 **Description:** This example generates 
 
 #### Good Examples
@@ -127,7 +127,7 @@ List of Examples
 >> Reason: 
 
 
-## Strings and operations Example
+### Strings and operations Example
 **Description:** This example generates 
 
 #### Good Examples
@@ -151,7 +151,7 @@ List of Examples
 
 
 
-## List/array data type and operations Example
+### List/array data type and operations Example
 **Description:** This example generates 
 
 #### Good Examples
@@ -178,7 +178,7 @@ List of Examples
 >> Reason: 
 
 
-## Some other feature of your choice Example
+### Some other feature of your choice Example
 **Description:** This example generates 
 
 #### Good Examples
