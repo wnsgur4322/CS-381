@@ -23,16 +23,12 @@ How to run examples
 
 > After above, "**runProg** [**example names**]"
 
-Example lists
--------------
-
-> Ex) run ex_ifgood1
+> Ex) runProg exgood_conditions
   
-> Ex) run exloop_good1
+> Ex) runProg exbad_conditions
 
 
-
-list of examples:
+List of Examples
 -------------
 
 ### Conditions Example
