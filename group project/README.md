@@ -21,7 +21,7 @@ How to run examples
 
 > "ghci group_project.hs" in the directory which has "group_project.hs"
 
-> "runProg <example names>"
+> After above, "runProg [example names]"
 
 Example lists
 -------------
