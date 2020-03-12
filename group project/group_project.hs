@@ -369,7 +369,7 @@ factorial n = [PushN 1, Let("fact"), PushN 1, Let("temp"),
 
 factorial2 :: Int -> Prog
 factorial2 n = [PushN 1, Let("fact"), PushN 1, Let ("temp"),
-              PushN 1, Let("i"), Loop [PushN n, Larger] [PushN 1, Add, Ref ("temp"), PushN 1, Add, Let ("temp2"), Bind("temp", Ref ("temp2")), Drop, Ref ("fact"), Ref ("temp"), Mul, Let("mul"), Bind("fact", Ref ("mul")), Drop]]
+              PushN 1, Let("i"), Loop [PushN n, Larger] [PushN 1, Add, Ref ("temp"), PushN 1, Add, Let ("temp2"), Bind("temp", Ref ("temp2")), Drop, Ref ("fact"), Ref ("temp"), Mul, Let("mul"), Bind("fact", Ref ("mul")), Drop], Drop, Drop]
 
 -- 4. Procedures/functions with arguments (or some other abstraction mechanism).
 --    You should provide a way to factor out repeated code and give it a name so that it can be reused. 
