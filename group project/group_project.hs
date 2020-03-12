@@ -328,10 +328,10 @@ def cpp_fib(n){
 }
 -}
 -- recursive fibonacci by original haskell
-fib2 :: Int -> Int
-fib2 0 = 0
-fib2 1 = 1
-fib2 n = fib2 (n-1) + fib2 (n-2)
+has_fib :: Int -> Int
+has_fib 0 = 0
+has_fib 1 = 1
+has_fib n = has_fib (n-1) + has_fib (n-2)
 
 -- recursive fibonacci numbers by 'Four' language
 rec_fib :: Int -> Prog
@@ -343,6 +343,31 @@ rec_fib n = rec_fib (n-1) ++ rec_fib(n-2) ++ [Add]
 itr_fib :: Int -> Prog
 itr_fib n = [PushN 0, Let("a"), PushN 1, Let("b"), PushN 0, Let("temp"), PushN 1, Let("i"), 
             Loop [PushN n, Larger] [PushN 1, Add, Bind("temp", Ref ("a")), Bind("a", Ref ("b")), Ref ("temp"), Ref ("b"), Add, Let("c"), Bind("b",Ref("c")), Drop], Drop, Drop, Drop]
+
+-- example of language usage: make factorial function with 'Four'
+-- python ver.
+{-
+def factorial(n):
+    fact = 1
+    for i in range(0, n):
+        fact = fact * i
+        
+    return fact
+
+-- c++ ver.
+def cpp_factorial(n){
+    int fact = 1;
+    for (int i =0; i<n; i++;){
+        fact = fact * i;
+    }
+    return fact
+}
+-}
+factorial :: Int -> Prog
+factorial n = [PushN 1, Let("fact"), 
+              PushN 1, Let("i"), Loop [PushN n, Larger] [PushN 1, Add, Ref ("fact"), Ref ("i"), Mul, Let("mul"), Bind("fact", Ref ("mul")), Drop]]
+
+
 
 -- 4. Procedures/functions with arguments (or some other abstraction mechanism).
 --    You should provide a way to factor out repeated code and give it a name so that it can be reused. 
@@ -382,6 +407,9 @@ extest3 = [PushN 3, Let("Test"), PushN 4, Let("Test2"), Smaller, Dup]
     Your language must also be able to process lists in some way, for example, by looping over them or through recursive pattern matching. -}
 int_list :: [Int] -> Prog
 int_list (x:xs) = map PushN (x:xs)
+
+list_concatenation :: [Int] -> [Int] -> Prog
+list_concatenation (x:xs) (y:ys) = int_list (x:xs) ++ int_list (y:ys)
 
 {-
 4. User-defined data types and pattern matching (3).

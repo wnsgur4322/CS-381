@@ -97,3 +97,12 @@ itr_fib n = [PushN 0, Let("a"), PushN 1, Let("b"), PushN 0, Let("temp"), PushN 1
 
 > run (itr_fib 6)
 >> Expected output: Just [V ("a", LeftI 8)]
+
+-- list operations
+-- list creation
+> run (int_list [1,2,3])
+>> Expected output: Just [LeftI 3,LeftI 2,LeftI 1]
+
+-- list concatenation
+> run (list_concatenation [1,2,3] [4,5,6])
+>> Expected output: Just [LeftI 6, LeftI 5, LeftI 4, LeftI 3, LeftI 2, LeftI 1]
