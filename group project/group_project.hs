@@ -280,7 +280,20 @@ run p = prog p []
 --                            (RightB False : s') -> prog e s'
 --                            _ -> Nothing
 
+grades :: Int -> Prog
+grades n = [PushN n, Let("score"), PushN 92, Larger, IfElse [PushS "A"] 
+           [Ref ("score"), PushN 89, Larger, IfElse [PushS "A-"] 
+           [Ref ("score"), PushN 86, Larger, IfElse [PushS "B+"] 
+           [Ref ("score"), PushN 82, Larger, IfElse [PushS "B"] 
+           [Ref ("score"), PushN 79, Larger, IfElse [PushS "B-"]
+           [Ref ("score"), PushN 76, Larger, IfElse [PushS "C+"]
+           [Ref ("score"), PushN 72, Larger, IfElse [PushS "C"]
+           [Ref ("score"), PushN 69, Larger, IfElse [PushS "C-"]
+           [Ref ("score"), PushN 59, Larger, IfElse [PushS "D-"]
+           [PushS "F"]]]]]]]]], Let ("result")]
 
+gradestest :: Int -> Prog
+gradestest n = [PushN n, Let("score"), PushN 92, Larger, IfElse [PushS "A"] [PushS "A"]]
 -- 3. Recursion/loops. 
 --    You should provide some way to loop in your language, either through an explicit looping construct (e.g. while) or through recursive functions.
 -- Loops (While loop) for Integers.
@@ -299,9 +312,6 @@ loophelp (V (n, LeftI v)) r s = case prog ((PushN v):r) s of
                     Just (LeftI b:s') -> (V (n, LeftI b):s')
                     _ -> [FError]
 
-
-exloop :: Prog
-exloop = [PushN 4, Let("t"), PushN 3, Let("Test"), Loop [PushN 5, Larger] [PushN 1, Add]]
 
 -- example of language usage: make Fibonacci numbers function with 'Four'
 -- python ver.
@@ -450,7 +460,9 @@ typeOf (Ref n)      = \s -> case s of
                         _ -> if (findType n s) == TError then [TError] else ((findType n s) : s)
 typeOf (IfElse t e) = \s -> case s of
                       (TBool: s') -> case (typeprog t s', typeprog e s') of
-                                     (tt, te) -> if tt == te then if (tt /= [TError]) then (tt ++ s') else [TError] else [TError]
+                                     (tt, te) -> if (tt /= [TError]) && (te /= [TError]) then (tt ++ s') else [TError]
+                      (FBool: s') -> case (typeprog t s', typeprog e s') of
+                                     (tt, te) -> if (tt /= [TError]) && (te /= [TError]) then (tt ++ s') else [TError]
                       _ -> [TError]
 typeOf (Loop c r) = \s -> case s of
                         (TInt : s') -> case (typeprog c s', typeprog r s') of
