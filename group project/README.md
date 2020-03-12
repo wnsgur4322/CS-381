@@ -45,10 +45,12 @@ List of Examples
 #### Bad Examples
 > runProg grades "A"
 >> Expected output: Error
+
 >> Reason: The input of grades can't be String because string isn't Integer value. Therefore, it occurs "Type error".
 
 > runProg grades 83.5
 >> Expected output: Error
+
 >> Reason: Our language can't handle "Float" and "Double" types which includes decimal points. Therefore, it occurs "Type error"
 
 
