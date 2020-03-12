@@ -16,8 +16,12 @@ Introduction
 
 
 
-To run examples => runProg <example names> after "ghci group_project.hs"
+How to run examples 
 -------------
+
+> "ghci group_project.hs" in the directory which has "group_project.hs"
+
+> "runProg <example names>"
 
 Example lists
 -------------
