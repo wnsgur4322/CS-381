@@ -68,57 +68,17 @@ data Val
 type Stack = [Val]
 type Domain = Stack -> Maybe Stack
 
-
 -- Define the semantics of a StackLang command (ignore If at first).
 cmd :: Four_Cmd -> Domain
 cmd (PushN i)    = \s -> Just (LeftI i : s)
 cmd (PushB b)    = \s -> Just (RightB b : s)
 cmd (PushS str)  = \s -> Just (MiddleS str : s)
-cmd Add          = \s -> case s of
-                           (LeftI i : LeftI j : s') -> Just (LeftI (i+j) : s')
-                           (MiddleS x : MiddleS y : s') -> Just (MiddleS (y++x) : s')
-                           (V (n, LeftI i) : LeftI j : s') -> Just (LeftI (i+j) : V (n, LeftI j) : s')
-                           (LeftI i : V (n, LeftI j) : s') -> Just (V (n, LeftI (i+j)) : s')
-                           (V (n, LeftI i) : V (x, LeftI j) : s') -> Just (V (n, LeftI (i)) : V (x, LeftI (i+j)) : s')
-                           (V (n, MiddleS i) : MiddleS j : s') -> Just (MiddleS (j++i) : V (n, MiddleS j) : s')
-                           (MiddleS i : V (n, MiddleS j) : s') -> Just (V (n, MiddleS (j++i)) : s')
-                           (V (n, MiddleS i) : V (x, MiddleS j) : s') -> Just (V (n, MiddleS (i)) : V (x, MiddleS (j++i)) : s')
-                           _ -> Nothing
-cmd Sub          = \s -> case s of
-                           (LeftI i : LeftI j : s') -> Just (LeftI (j-i) : s')
-                           (V (n, LeftI i) : LeftI j : s') -> Just (LeftI (j-i) : V (n, LeftI i) : s')
-                           (LeftI i : V (n, LeftI j) : s') -> Just (V (n, LeftI (j-i)) : s')
-                           (V (n, LeftI i) : V (x, LeftI j) : s') -> Just (V (n, LeftI (i)) : V (x, LeftI (j-i)) : s')
-                           _ -> Nothing
-cmd Mul          = \s -> case s of
-                           (LeftI i : LeftI j : s') -> Just (LeftI (j*i) : s')
-                           (V (n, LeftI i) : LeftI j : s') -> Just (LeftI (j*i) : V (n, LeftI i) : s')
-                           (LeftI i : V (n, LeftI j) : s') -> Just (V (n, LeftI (j*i)) : s')
-                           (V (n, LeftI i) : V (x, LeftI j) : s') -> Just (V (n, LeftI (i)) : V (x, LeftI (j*i)) : s')
-                           _ -> Nothing
-cmd Equ          = \s -> case s of
-                           (LeftI i  : LeftI j  : s') -> Just (RightB (i == j) : s')
-                           (MiddleS x : MiddleS y : s') -> Just (RightB (x == y) : s')
-                           (RightB a : RightB b : s') -> Just (RightB (a == b) : s')
-                           (V (n, LeftI i) : LeftI j : s') -> Just (RightB (i == j) : V (n, LeftI i) : s')
-                           (LeftI i : V (n, LeftI j) : s') -> Just (RightB (i == j) : V (n, LeftI j) : s')
-                           (V (n, LeftI i) : V (x, LeftI j) : s') -> Just (RightB (i == j) : V (n, LeftI (i)) : V (x, LeftI j) : s')
-                           (V (n, MiddleS i) : MiddleS j : s') -> Just (RightB (i == j) : V (n, MiddleS i) : s')
-                           (MiddleS i : V (n, MiddleS j) : s') -> Just (RightB (i == j) : V (n, MiddleS j) : s')
-                           (V (n, MiddleS i) : V (x, MiddleS j) : s') -> Just (RightB (i == j) : V (n, MiddleS (i)) : V (x, MiddleS j) : s')
-                           _ -> Nothing
-cmd Larger       = \s -> case s of
-                           (LeftI i  : LeftI j  : s') -> Just (RightB (i < j) : s')
-                           (LeftI i : V (n, LeftI j) : s') -> Just (RightB (i < j) : V (n, LeftI j) : s')
-                           (V (n, LeftI i) : LeftI j : s') -> Just (RightB (i < j) : V (n, LeftI i) : s')
-                           (V (n, LeftI i) : V (x, LeftI j) : s') -> Just (RightB (i < j) : V (n, LeftI (i)) : V (x, LeftI j) : s')
-                           _ -> Nothing
-cmd Smaller      = \s -> case s of
-                           (LeftI i  : LeftI j  : s') -> Just (RightB (i > j) : s')
-                           (LeftI i : V (n, LeftI j) : s') -> Just (RightB (i > j) : V (n, LeftI j) : s')
-                           (V (n, LeftI i) : LeftI j : s') -> Just (RightB (i > j) : V (n, LeftI i) : s')
-                           (V (n, LeftI i) : V (x, LeftI j) : s') -> Just (RightB (i > j) : V (n, LeftI (i)) : V (x, LeftI j) : s')
-                           _ -> Nothing
+cmd Add          = \s -> add_helper s
+cmd Sub          = \s -> sub_helper s
+cmd Mul          = \s -> mul_helper s
+cmd Equ          = \s -> equ_helper s
+cmd Larger       = \s -> larger_helper s
+cmd Smaller      = \s -> smaller_helper s
 cmd (IfElse t e) = \s -> case s of
                            (RightB True  : s') -> prog t s'
                            (RightB False : s') -> prog e s'
@@ -133,23 +93,11 @@ cmd (Loop c r)   = \s -> case s of -- it's while loop (not do-while)
                            (V (n, RightB False) : s') -> Just s'
                            (V (n, LeftI v) : s') -> loop (V (n, LeftI v))  c  r  s'
                            _ -> Nothing
-cmd Dup         = \s -> case s of
-                           (LeftI i : s') -> Just (LeftI i : LeftI i : s')
-                           (MiddleS x : s') -> Just (MiddleS x : MiddleS x : s')
-                           (RightB a : s') -> Just (RightB a : RightB a : s')              
-                           _ -> Nothing
-cmd Drop         = \s -> case s of
-                           ( _ : s') -> Just (s')             
-                           _ -> Nothing
-cmd Swap         = \s -> case s of
-                           (a  : b  : s') -> Just (b  : a : s')   
-                           _ -> Nothing
-cmd Over     = \s -> case s of
-                           (x : y : s') -> Just (x : y : x : s')
-                           _ -> Nothing
-cmd Rot     = \s -> case s of
-                           (x : y : z : s') -> Just (y : z : x : s')
-                           _ -> Nothing
+cmd Dup         = \s -> dup_helper s
+cmd Drop         = \s -> drop_helper s
+cmd Swap         = \s -> swap_helper s
+cmd Over     = \s -> over_helper s
+cmd Rot     = \s -> rot_helper s
 cmd (Let n) = \s -> case ((cmd (Ref n) s), s) of -- Avoid duplicates varname.
                           (Nothing, (LeftI i : s')) -> Just (V (n, LeftI i) : s')
                           (Nothing, (MiddleS str : s')) -> Just (V (n, MiddleS str) : s')
@@ -170,6 +118,95 @@ cmd (Bind (n, v)) = \s -> case v of
                                     (Just (MiddleS i:s'), Just [MiddleS j]) -> if (findVar (n, MiddleS j) (reverse s)) /= [FError] then Just (findVar (n, MiddleS j) (reverse s)) else Nothing
                                     (Just (RightB i:s'), Just [RightB j]) -> if (findVar (n, RightB j) (reverse s)) /= [FError] then Just (findVar (n, RightB j) (reverse s)) else Nothing
                                     _ -> Nothing
+
+
+-- Helpers to make neat 'cmd'
+
+add_helper :: Stack -> Maybe Stack
+add_helper = \s -> case s of
+                (LeftI i : LeftI j : s') -> Just (LeftI (i+j) : s')
+                (MiddleS x : MiddleS y : s') -> Just (MiddleS (y++x) : s')
+                (V (n, LeftI i) : LeftI j : s') -> Just (LeftI (i+j) : V (n, LeftI j) : s')
+                (LeftI i : V (n, LeftI j) : s') -> Just (V (n, LeftI (i+j)) : s')
+                (V (n, LeftI i) : V (x, LeftI j) : s') -> Just (V (n, LeftI (i)) : V (x, LeftI (i+j)) : s')
+                (V (n, MiddleS i) : MiddleS j : s') -> Just (MiddleS (j++i) : V (n, MiddleS j) : s')
+                (MiddleS i : V (n, MiddleS j) : s') -> Just (V (n, MiddleS (j++i)) : s')
+                (V (n, MiddleS i) : V (x, MiddleS j) : s') -> Just (V (n, MiddleS (i)) : V (x, MiddleS (j++i)) : s')
+                _ -> Nothing
+
+sub_helper :: Stack -> Maybe Stack
+sub_helper = \s -> case s of
+                (LeftI i : LeftI j : s') -> Just (LeftI (j-i) : s')
+                (V (n, LeftI i) : LeftI j : s') -> Just (LeftI (j-i) : V (n, LeftI i) : s')
+                (LeftI i : V (n, LeftI j) : s') -> Just (V (n, LeftI (j-i)) : s')
+                (V (n, LeftI i) : V (x, LeftI j) : s') -> Just (V (n, LeftI (i)) : V (x, LeftI (j-i)) : s')
+                _ -> Nothing
+
+mul_helper :: Stack -> Maybe Stack
+mul_helper = \s -> case s of
+                (LeftI i : LeftI j : s') -> Just (LeftI (j*i) : s')
+                (V (n, LeftI i) : LeftI j : s') -> Just (LeftI (j*i) : V (n, LeftI i) : s')
+                (LeftI i : V (n, LeftI j) : s') -> Just (V (n, LeftI (j*i)) : s')
+                (V (n, LeftI i) : V (x, LeftI j) : s') -> Just (V (n, LeftI (i)) : V (x, LeftI (j*i)) : s')
+                _ -> Nothing
+
+equ_helper :: Stack -> Maybe Stack
+equ_helper = \s -> case s of
+                (LeftI i  : LeftI j  : s') -> Just (RightB (i == j) : s')
+                (MiddleS x : MiddleS y : s') -> Just (RightB (x == y) : s')
+                (RightB a : RightB b : s') -> Just (RightB (a == b) : s')
+                (V (n, LeftI i) : LeftI j : s') -> Just (RightB (i == j) : V (n, LeftI i) : s')
+                (LeftI i : V (n, LeftI j) : s') -> Just (RightB (i == j) : V (n, LeftI j) : s')
+                (V (n, LeftI i) : V (x, LeftI j) : s') -> Just (RightB (i == j) : V (n, LeftI (i)) : V (x, LeftI j) : s')
+                (V (n, MiddleS i) : MiddleS j : s') -> Just (RightB (i == j) : V (n, MiddleS i) : s')
+                (MiddleS i : V (n, MiddleS j) : s') -> Just (RightB (i == j) : V (n, MiddleS j) : s')
+                (V (n, MiddleS i) : V (x, MiddleS j) : s') -> Just (RightB (i == j) : V (n, MiddleS (i)) : V (x, MiddleS j) : s')
+                _ -> Nothing
+
+larger_helper :: Stack -> Maybe Stack
+larger_helper = \s -> case s of
+                    (LeftI i  : LeftI j  : s') -> Just (RightB (i < j) : s')
+                    (LeftI i : V (n, LeftI j) : s') -> Just (RightB (i < j) : V (n, LeftI j) : s')
+                    (V (n, LeftI i) : LeftI j : s') -> Just (RightB (i < j) : V (n, LeftI i) : s')
+                    (V (n, LeftI i) : V (x, LeftI j) : s') -> Just (RightB (i < j) : V (n, LeftI (i)) : V (x, LeftI j) : s')
+                    _ -> Nothing
+
+smaller_helper :: Stack -> Maybe Stack
+smaller_helper = \s -> case s of
+                    (LeftI i  : LeftI j  : s') -> Just (RightB (i > j) : s')
+                    (LeftI i : V (n, LeftI j) : s') -> Just (RightB (i > j) : V (n, LeftI j) : s')
+                    (V (n, LeftI i) : LeftI j : s') -> Just (RightB (i > j) : V (n, LeftI i) : s')
+                    (V (n, LeftI i) : V (x, LeftI j) : s') -> Just (RightB (i > j) : V (n, LeftI (i)) : V (x, LeftI j) : s')
+                    _ -> Nothing
+
+dup_helper :: Stack -> Maybe Stack
+dup_helper = \s -> case s of
+                    (LeftI i : s') -> Just (LeftI i : LeftI i : s')
+                    (MiddleS x : s') -> Just (MiddleS x : MiddleS x : s')
+                    (RightB a : s') -> Just (RightB a : RightB a : s')              
+                    _ -> Nothing
+
+drop_helper :: Stack -> Maybe Stack
+drop_helper = \s -> case s of
+                    ( _ : s') -> Just (s')             
+                    _ -> Nothing
+
+swap_helper :: Stack -> Maybe Stack
+swap_helper = \s -> case s of
+                    (a  : b  : s') -> Just (b  : a : s')   
+                    _ -> Nothing
+
+over_helper :: Stack -> Maybe Stack
+over_helper = \s -> case s of
+                    (x : y : s') -> Just (x : y : x : s')
+                    _ -> Nothing
+
+rot_helper :: Stack -> Maybe Stack
+rot_helper = \s -> case s of
+                    (x : y : z : s') -> Just (y : z : x : s')
+                    _ -> Nothing
+
+
 
 
 bindtest :: Prog
@@ -304,8 +341,8 @@ rec_fib n = rec_fib (n-1) ++ rec_fib(n-2) ++ [Add]
 
 -- iterative fibonacci umbers by 'Four' language
 itr_fib :: Int -> Prog
-itr_fib n = [PushN 0, Let("a"), PushN 1, Let("b"), PushN 0, Let("temp"), PushN 1, Let("i"), Loop [PushN n, Larger] [PushN 1, Add, Bind("temp", Ref ("a")), Bind("a", Ref ("b")), Ref ("temp"), Ref ("b"), Add, Let("c"), Bind("b",Ref("c")), Drop], Drop, Drop, Drop]
-
+itr_fib n = [PushN 0, Let("a"), PushN 1, Let("b"), PushN 0, Let("temp"), PushN 1, Let("i"), 
+            Loop [PushN n, Larger] [PushN 1, Add, Bind("temp", Ref ("a")), Bind("a", Ref ("b")), Ref ("temp"), Ref ("b"), Add, Let("c"), Bind("b",Ref("c")), Drop], Drop, Drop, Drop]
 
 -- 4. Procedures/functions with arguments (or some other abstraction mechanism).
 --    You should provide a way to factor out repeated code and give it a name so that it can be reused. 
@@ -337,13 +374,16 @@ extest3 = [PushN 3, Let("Test"), PushN 4, Let("Test2"), Smaller, Dup]
 2. Tuples and operations (1).
     This feature would enable creating tuples of other values, such as (2,true). 
     You should also be able to represent tuples containing tuples, such as (2,(true,"hello")).
-    The set of operations is up to you but must include at least operations to get the first and second elements from the tuple.
+    The set of operations is up to you but must include at least operations to get the first and second elements from the tuple. -}
 
-
+{-
 3. List/array data type and operations (2). 
     This feature would enable creating and manipulating lists of values. Your operations should include standard operations such as indexing and (for lists) concatenation. 
-    Your language must also be able to process lists in some way, for example, by looping over them or through recursive pattern matching.
+    Your language must also be able to process lists in some way, for example, by looping over them or through recursive pattern matching. -}
+int_list :: [Int] -> Prog
+int_list (x:xs) = map PushN (x:xs)
 
+{-
 4. User-defined data types and pattern matching (3).
     This feature would enable defining new recursive data types, such as lists or trees, at the library level. 
     Your language must all support processing these new data types in some way, such as through recursion and pattern matching.
@@ -365,54 +405,12 @@ typeOf :: Four_Cmd -> Tstack -> [Type]
 typeOf (PushN i)    = \s -> (TInt : s)
 typeOf (PushB b)    = \s -> if b == True then (TBool : s) else (FBool : s)
 typeOf (PushS s)    = \s -> (TString : s)
-typeOf Add          = \s -> case s of
-                      (TInt : TInt : s') -> (TInt : s')
-                      (TString : TString : s') -> (TString : s')
-                      (T (n, TInt) : TInt : s') -> (TInt : T (n, TInt) : s')
-                      (TInt : T (n, TInt) : s') -> (T (n, TInt) : s')
-                      (T (n, TInt) : T (x, TInt) : s') -> (T (n, TInt) : T (x, TInt) : s')
-                      (T (n, TString) : TString : s') -> (TString : T (n, TString) : s')
-                      (TString : T (n, TString) : s') -> (T (n, TString) : s')
-                      (T (n, TString) : T (x, TString) : s') -> (T (n, TString) : T (x, TString) : s')
-                      _ -> [TError]
-typeOf Sub          = \s -> case s of
-                      (TInt : TInt : s') -> (TInt : s')
-                      (T (n, TInt) : TInt : s') -> (TInt : T (n, TInt) : s')
-                      (TInt : T (n, TInt) : s') -> (T (n, TInt) : s')
-                      (T (n, TInt) : T (x, TInt) : s') -> (T (n, TInt) : T (x, TInt) : s')    
-                      _ -> [TError]
-typeOf Mul          = \s -> case s of
-                      (TInt : TInt : s') -> (TInt : s')
-                      (T (n, TInt) : TInt : s') -> (TInt : T (n, TInt) : s')
-                      (TInt : T (n, TInt) : s') -> (T (n, TInt) : s')
-                      (T (n, TInt) : T (x, TInt) : s') -> (T (n, TInt) : T (x, TInt) : s')    
-                      _ -> [TError]
-typeOf Equ          = \s -> case s of
-                      (TInt : TInt : s') -> (FBool : s')
-                      (TBool : TBool : s') -> (TBool : s')
-                      (TBool : FBool : s') -> (FBool : s')
-                      (FBool : TBool : s') -> (FBool : s')
-                      (FBool : FBool : s') -> (FBool : s')
-                      (TString : TString : s') -> (FBool : s')
-                      (T (n, TInt) : TInt : s') -> (FBool : T (n, TInt) : s')
-                      (TInt : T (n, TInt) : s') -> (FBool : T (n, TInt) : s')
-                      (T (n, TInt) : T (x, TInt) : s') -> (FBool : T (n, TInt) : T (x, TInt) : s')
-                      (T (n, TString) : TString : s') -> (FBool : T (n, TString) : s')
-                      (TString : T (n, TString) : s') -> (FBool : T (n, TString) : s')
-                      (T (n, TString) : T (x, TString) : s') -> (FBool : T (n, TString) : T (x, TString) : s')
-                      _ -> [TError]
-typeOf Larger       = \s -> case s of
-                           (TInt  : TInt  : s') -> (FBool : s')
-                           (T (n, TInt) : TInt : s') -> (FBool : T (n, TInt) : s')
-                           (TInt : T (n, TInt) : s') -> (FBool : T (n, TInt) : s')
-                           (T (n, TInt) : T (x, TInt) : s') -> (FBool : T (n, TInt) : T (x, TInt) : s')
-                           _ -> [TError]
-typeOf Smaller      = \s -> case s of
-                           (TInt  : TInt  : s') -> (FBool : s')
-                           (T (n, TInt) : TInt : s') -> (FBool : T (n, TInt) : s')
-                           (TInt : T (n, TInt) : s') -> (FBool : T (n, TInt) : s')
-                           (T (n, TInt) : T (x, TInt) : s') -> (FBool : T (n, TInt) : T (x, TInt) : s')
-                           _ -> [TError]
+typeOf Add          = \s -> tadd_helper s
+typeOf Sub          = \s -> tsub_helper s
+typeOf Mul          = \s -> tmul_helper s
+typeOf Equ          = \s -> tequ_helper s
+typeOf Larger       = \s -> tlarger_helper s
+typeOf Smaller      = \s -> tsmaller_helper s
 typeOf (Let n)      = \s -> case ((typeOf (Ref n) s), s) of
                       ([TError], (TInt : s')) -> (T (n, TInt) : s')
                       ([TError], (TString : s')) -> (T (n, TString) : s')
@@ -445,24 +443,11 @@ typeOf (Loop c r) = \s -> case s of
                         (FBool : s') -> typeprog r s'
                         (T (n, FBool) : s') -> typeprog r s'
                         _ -> [TError]
-typeOf Dup        = \s -> case s of
-                      (TInt : s') -> (TInt : s')
-                      (TBool : s') -> (TBool : s')
-                      (FBool : s') -> (FBool : s')
-                      (TString : s') -> (TString : s')
-                      _ -> [TError]     
-typeOf Drop         = \s -> case s of
-                           ( _ : s') -> s'             
-                           _ -> [TError]
-typeOf Swap         = \s -> case s of
-                           (a  : b  : s') -> (b : a : s')
-                           _ -> [TError]
-typeOf Over     = \s -> case s of
-                           (x : y : s') -> (x : y : x : s')
-                           _ -> [TError]
-typeOf Rot     = \s -> case s of
-                           (x : y : z : s') -> (y : z : x : s')
-                           _ -> [TError]
+typeOf Dup        = \s -> tdup_helper s    
+typeOf Drop         = \s -> tdrop_helper s
+typeOf Swap         = \s -> tswap_helper s
+typeOf Over     = \s -> tover_helper s
+typeOf Rot     = \s -> trot_helper s
 typeOf (Bind (n, v)) = \s -> case v of
                                 (Ref t) -> case ((typeOf (Ref n) s), (typeOf (Ref t) s)) of
                                                 ((TInt:s'), (TInt:x')) -> findTypeVar (T (n, TInt)) (reverse s)
@@ -480,6 +465,95 @@ typeOf (Bind (n, v)) = \s -> case v of
                                                 ((FBool:s'), [FBool]) -> findTypeVar (T (n, FBool)) (reverse s)
                                                 ((FBool:s'), [TBool]) -> findTypeVar (T (n, TBool)) (reverse s)
                                                 _ -> [TError]
+
+-- typeof helpers to make neat code
+tadd_helper :: Tstack -> [Type]
+tadd_helper = \s -> case s of
+                      (TInt : TInt : s') -> (TInt : s')
+                      (TString : TString : s') -> (TString : s')
+                      (T (n, TInt) : TInt : s') -> (TInt : T (n, TInt) : s')
+                      (TInt : T (n, TInt) : s') -> (T (n, TInt) : s')
+                      (T (n, TInt) : T (x, TInt) : s') -> (T (n, TInt) : T (x, TInt) : s')
+                      (T (n, TString) : TString : s') -> (TString : T (n, TString) : s')
+                      (TString : T (n, TString) : s') -> (T (n, TString) : s')
+                      (T (n, TString) : T (x, TString) : s') -> (T (n, TString) : T (x, TString) : s')
+                      _ -> [TError]
+
+tsub_helper :: Tstack -> [Type]
+tsub_helper = \s -> case s of
+                      (TInt : TInt : s') -> (TInt : s')
+                      (T (n, TInt) : TInt : s') -> (TInt : T (n, TInt) : s')
+                      (TInt : T (n, TInt) : s') -> (T (n, TInt) : s')
+                      (T (n, TInt) : T (x, TInt) : s') -> (T (n, TInt) : T (x, TInt) : s')    
+                      _ -> [TError]
+
+tmul_helper :: Tstack -> [Type]
+tmul_helper = \s -> case s of
+                      (TInt : TInt : s') -> (TInt : s')
+                      (T (n, TInt) : TInt : s') -> (TInt : T (n, TInt) : s')
+                      (TInt : T (n, TInt) : s') -> (T (n, TInt) : s')
+                      (T (n, TInt) : T (x, TInt) : s') -> (T (n, TInt) : T (x, TInt) : s')    
+                      _ -> [TError]
+
+tequ_helper :: Tstack -> [Type]
+tequ_helper = \s -> case s of
+                      (TInt : TInt : s') -> (FBool : s')
+                      (TBool : TBool : s') -> (TBool : s')
+                      (TBool : FBool : s') -> (FBool : s')
+                      (FBool : TBool : s') -> (FBool : s')
+                      (FBool : FBool : s') -> (FBool : s')
+                      (TString : TString : s') -> (FBool : s')
+                      (T (n, TInt) : TInt : s') -> (FBool : T (n, TInt) : s')
+                      (TInt : T (n, TInt) : s') -> (FBool : T (n, TInt) : s')
+                      (T (n, TInt) : T (x, TInt) : s') -> (FBool : T (n, TInt) : T (x, TInt) : s')
+                      (T (n, TString) : TString : s') -> (FBool : T (n, TString) : s')
+                      (TString : T (n, TString) : s') -> (FBool : T (n, TString) : s')
+                      (T (n, TString) : T (x, TString) : s') -> (FBool : T (n, TString) : T (x, TString) : s')
+                      _ -> [TError]
+
+tlarger_helper :: Tstack -> [Type]
+tlarger_helper = \s -> case s of
+                           (TInt  : TInt  : s') -> (FBool : s')
+                           (T (n, TInt) : TInt : s') -> (FBool : T (n, TInt) : s')
+                           (TInt : T (n, TInt) : s') -> (FBool : T (n, TInt) : s')
+                           (T (n, TInt) : T (x, TInt) : s') -> (FBool : T (n, TInt) : T (x, TInt) : s')
+                           _ -> [TError]
+
+tsmaller_helper :: Tstack -> [Type]
+tsmaller_helper = \s -> case s of
+                           (TInt  : TInt  : s') -> (FBool : s')
+                           (T (n, TInt) : TInt : s') -> (FBool : T (n, TInt) : s')
+                           (TInt : T (n, TInt) : s') -> (FBool : T (n, TInt) : s')
+                           (T (n, TInt) : T (x, TInt) : s') -> (FBool : T (n, TInt) : T (x, TInt) : s')
+                           _ -> [TError]
+
+tdup_helper :: Tstack -> [Type]
+tdup_helper = \s -> case s of
+                      (TInt : s') -> (TInt : s')
+                      (TBool : s') -> (TBool : s')
+                      (FBool : s') -> (FBool : s')
+                      (TString : s') -> (TString : s')
+                      _ -> [TError]
+
+tdrop_helper :: Tstack -> [Type]
+tdrop_helper = \s -> case s of
+                           ( _ : s') -> s'             
+                           _ -> [TError]
+
+tswap_helper :: Tstack -> [Type]
+tswap_helper = \s -> case s of
+                           (a  : b  : s') -> (b : a : s')
+                           _ -> [TError]
+
+tover_helper :: Tstack -> [Type]
+tover_helper = \s -> case s of
+                           (x : y : s') -> (x : y : x : s')
+                           _ -> [TError]
+
+trot_helper :: Tstack -> [Type]
+trot_helper = \s -> case s of
+                           (x : y : z : s') -> (y : z : x : s')
+                           _ -> [TError]
 
 findTypeVar :: Type -> Tstack -> [Type]
 findTypeVar (T (n, v)) (s:s') = case s of
