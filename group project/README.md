@@ -191,7 +191,7 @@ List of Examples
 
 
 ### List/array data type and operations Example
-**Description:** This example generates 
+**Description:** This example generates list creation and concatenation after creating two lists uisng 'int_list'.
 
 #### Good Examples
 -- list operations
@@ -206,16 +206,16 @@ List of Examples
 
 
 #### Bad Examples
-> runProg 
+> runProg (int_list ["a","b","c"])
 >> Expected output: Error
 
->> Reason:  
+>> Reason: In our language, Integer value only can create list (not other types: string and bool). Threrefore, it occurs error when you use 'int_list' with string or bool type values
 
 
-> runProg 
+> runProg (list_concatenation ["a","b","c"] [4,5,6]) 
 >> Expected output: Error
 
->> Reason: 
+>> Reason: In our language, list concatenation also can be handled by integer values (not other types: string and bool). Threrefore, it occurs error with string or bool type values
 
 
 ### Some other feature of your choice Example
