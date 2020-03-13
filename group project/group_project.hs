@@ -632,3 +632,18 @@ runProg p = if typeProgT p [] then prog p [] else Nothing
     In other words, you can’t just add another simple type of value to a language with strings and tuples and call it a day!) -}
 -- We can change a value which has a name by "Let" through "Bind" like a = 3; a = 5; => Result: a = 5.
 -- Also, through "Bind", we can do not only a = 3; a = 5;, also a = 3; b = 5; a = b; => Result : a = 5, b = 5.
+
+good_bind1 :: Prog
+good_bind1 = [PushN 4, Let ("a"), Bind ("a", PushN 3)]
+
+good_bind2 :: Prog
+good_bind2 = [PushN 4, Let ("a"), PushN 3, Let ("b"), Bind ("a", Ref ("b"))]
+
+bad_bind1 :: Prog
+bad_bind1 = [PushN 4, Let ("a"), Bind ("a", PushS "Hi")]
+
+bad_bind2 :: Prog
+bad_bind2 = [PushN 4, Let ("a"), PushS "Hi", Let ("b"), Bind ("a", Ref ("b"))]
+
+bad_let :: Prog
+bad_let = [PushN 4, Let ("a"), PushN 3, Let ("a")]
