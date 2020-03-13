@@ -6,6 +6,7 @@ Team members
 
 > Youngjoo Lee, leey3@oregonstate.edu
 
+> Ehtan Mendelson, mendelse@oregonstate.edu
 
 Introduction
 -------------
