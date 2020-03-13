@@ -105,26 +105,54 @@ List of Examples
 
 
 ### Stack manipulation operations Example
-**Description:** This example generates 
-
 #### Good Examples
-> runProg 
->> Expected output:
+**Description:** This example generates Double with "Dup" and "Mul".
+> runProg (double_value 2)
+>>double_value :: Int -> Prog
 
-> runProg 
->> Expected output: 
+>> double_value n = [PushN n, Dup, Mul]
+
+>> Expected output: Just [LeftI 4]
+
+**Description:** This example generates Triple with "Dup", "Over", and "Mul".
+> runProg (triple_value 3)
+
+>> triple_value :: Int -> Prog
+
+>> triple_value n = [PushN n, Dup, Over, Mul, Mul]
+
+>> Expected output: Just [LeftI 27]
 
 #### Bad Examples
-> runProg 
->> Expected output: Error
+**Description:** Generally, Stack manipulation oeprations can't make bad examples because 'Dup', 'drop', 'swap', 'over', 'rot' can be applied in any situation without duplication with value name, empty stack or lacking inputs in stack. Thus, there is one example with trying duplication value with name, one example in empty stack, and one example lacking input numbers in stack for 'swap', 'rot', or 'over'.  
 
->> Reason:  
+> runProg error_dup 
+>> error_dup :: Prog
+
+>> error_dup = [PushN 3, Let ("a"), Dup]
+
+>> Expected output: Nothing
+
+>> Reason:  As I said before, make value with same name which showed up before, so 'Dup' with value with name can't be approved.
+
+> runProg (empty_stack) 
+>> empty_stack :: Prog
+
+>> empty_stack = [Dup]
+
+>> Expected output: Nothing
+
+>> Reason:  Duplication can't apply to Empty stack because duplication needs at least one value before calling 'Dup'.
 
 
-> runProg 
->> Expected output: Error
+> runProg lack_input
+>> lack_input :: Prog
 
->> Reason: 
+>> lack_input = [PushN 3, Swap]
+
+>> Expected output: Nothing
+
+>> Reason: To swap values, needs two values which will be swapped before calling 'Swap'
 
 
 ### Strings and operations Example
