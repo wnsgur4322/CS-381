@@ -10,7 +10,7 @@ Team members
 
 Introduction
 -------------
-> Four is a stack-based language with four input types for constructing and calculating mathmatical problems (Integer, Bool, String, and Name with each type). 
+> Four is a stack-based language with four input types for constructing and calculating mathematical problems (Integer, Bool, String, and Name with each type). 
 
 
 
