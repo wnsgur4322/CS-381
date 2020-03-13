@@ -418,11 +418,31 @@ lack_input = [PushN 3, Swap]
 -- ex)
 -- run [PushS "String ", PushS "Test",  Add, PushS "Correct", Add]
 -- Just [MiddleS "String TestCorrect"]
+-}
 
+string_con1 :: Prog
+string_con1 = [PushS "3 is bigger than 4? -> ", PushS "Result: ", Add, PushN 3, PushN 4, Larger, IfElse [PushS "True"] [PushS "False"], Add]
+
+string_con2 :: Prog
+string_con2 = [PushS "3 is smaller than 4? -> ", PushS "Result: ", Add, PushN 3, PushN 4, Smaller, IfElse [PushS "True"] [PushS "False"], Add]
+
+string_con3 :: Prog
+string_con3 = [PushS "3 is smaller than 4? -> ", Let "Question", PushS "Result: ", Add, PushN 3, PushN 4, Smaller, IfElse [PushS "True"] [PushS "False"], Add]
+
+
+bad_string_con1 :: Prog
+bad_string_con1 = [PushS "3 is bigger than 4? -> ", PushS "Result: ", Add, PushN 3, PushN 4, Larger, IfElse [PushB True] [PushB False], Add]
+
+bad_string_con2 :: Prog
+bad_string_con2 = [PushS "What is 3 + 4? -> ", PushS "Result: ", Add, PushN 3, PushN 4, Add, Add]
+
+{-
 2. Tuples and operations (1).
     This feature would enable creating tuples of other values, such as (2,true). 
     You should also be able to represent tuples containing tuples, such as (2,(true,"hello")).
-    The set of operations is up to you but must include at least operations to get the first and second elements from the tuple. -}
+    The set of operations is up to you but must include at least operations to get the first and second elements from the tuple. 
+-}
+
 
 {-
 3. List/array data type and operations (2). 
