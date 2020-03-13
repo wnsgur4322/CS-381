@@ -144,7 +144,7 @@ sub_helper = \s -> case s of
 
 mul_helper :: Stack -> Maybe Stack
 mul_helper = \s -> case s of
-                (LeftI i : LeftI j : s') -> Just (LeftI (j*i) : s')
+                (LeftI i : LeftI j : s') -> Just (LeftI (i*j) : s')
                 (V (n, LeftI i) : LeftI j : s') -> Just (LeftI (j*i) : V (n, LeftI i) : s')
                 (LeftI i : V (n, LeftI j) : s') -> Just (V (n, LeftI (j*i)) : s')
                 (V (n, LeftI i) : V (x, LeftI j) : s') -> Just (V (n, LeftI (i)) : V (x, LeftI (j*i)) : s')
@@ -391,6 +391,20 @@ extest3 = [PushN 3, Let("Test"), PushN 4, Let("Test2"), Smaller, Dup]
 -- 5. Stack manipulation operations (stack-based languages only). 
 --    You should provide a set of basic operations for manipulating values on the stack. You may want to look at a set of Forth stack maneuvers for inspiration. -}
 
+double_value :: Int -> Prog
+double_value n = [PushN n, Dup, Mul]
+
+triple_value :: Int -> Prog
+triple_value n = [PushN n, Dup, Over, Mul, Mul]
+
+error_dup :: Prog
+error_dup = [PushN 3, Let ("a"), Dup]
+
+empty_stack :: Prog
+empty_stack = [Dup]
+
+lack_input :: Prog
+lack_input = [PushN 3, Swap]
 
 
 {-Additionally, you must include at least 3 points worth of the following features. The point value of each feature is indicated in parentheses after the feature name.
@@ -568,10 +582,10 @@ tsmaller_helper = \s -> case s of
 
 tdup_helper :: Tstack -> [Type]
 tdup_helper = \s -> case s of
-                      (TInt : s') -> (TInt : s')
-                      (TBool : s') -> (TBool : s')
-                      (FBool : s') -> (FBool : s')
-                      (TString : s') -> (TString : s')
+                      (TInt : s') -> (TInt : TInt: s')
+                      (TBool : s') -> (TBool : TBool: s')
+                      (FBool : s') -> (FBool : FBool: s')
+                      (TString : s') -> (TString : TString : s')
                       _ -> [TError]
 
 tdrop_helper :: Tstack -> [Type]
