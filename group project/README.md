@@ -102,6 +102,8 @@ List of Examples
 
 
 ### Stack manipulation operations Example
+**Description:** Generally, Stack manipulation operations are used in Fibonacci and factorial, but it's hard to show how the user just uses Stack maniuplation operations. Thus, we made some sample examples of them to show it works and not work when.
+
 #### Good Examples
 **Description:** This example generates Double with "Dup" and "Mul".
 > runProg (double_value 2)
@@ -216,7 +218,7 @@ List of Examples
 
 
 ### Some other feature of your choice Example
-**Description:** Fibonacci and Factorial examples also uses "Bind" with "Ref" to change value with names (By "Let"). In these examples, just to make clear, there are some examples how "Bind" with "Ref" and "Bind without "Ref" work.
+**Description:** Fibonacci and Factorial examples also uses "Bind" with "Ref" to change value with names (By "Let"). In these examples, just to make clear, there are some examples how "Bind" with "Ref" and "Bind without "Ref" work. ("Bind" and "Let" for the user who uses this language are used to construct fibonacci, factorial, and other mathmatics features, so below examples just shows how to use it and features of "Bind" and "Let")
 
 #### Good Examples
 
