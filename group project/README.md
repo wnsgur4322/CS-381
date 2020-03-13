@@ -195,6 +195,7 @@ List of Examples
 
 #### Good Examples
 -- list operations
+
 -- list creation
 > runProg (int_list [1,2,3])
 >> Expected output: Just [LeftI 3,LeftI 2,LeftI 1]
