@@ -87,9 +87,13 @@ e.g. [("i", 3), Loop, [3, Larger], [1, Add]] -> [("i", 4)]
 
 ### Procedures/functions with arguments Example
 How to use: [Value(String, integer, or boolean (e.g 2)), Let ("Name")] -> [("Name", 2)]
+
 If there is an value with name: [Ref("Name")] --> [Value] from "Name" -> e.g.) [Ref("Name")] -> [2]
+
 If want to change value in "Name": [Bind("Name", value you want to change (e.g. 3))] -> [("Name", 3)]
+
 (or Bind("Name", Ref("OTHER"))) -> [("Name", 5), ("OTHER", 5)]
+
 **Description:** This example generates Factorial numbers using reused value through calling its name by "Ref". In "factorial" function, it used "Ref" to use its value without name to refer to its value to calculate factorial numbers with 'n'
 
 (Ref only can be used for 'V (name, value) which has value name with its value')
@@ -116,10 +120,15 @@ If want to change value in "Name": [Bind("Name", value you want to change (e.g. 
 
 ### Stack manipulation operations Example
 How to use: [Value, Dup] -> [Value, Value]
+
 [Value, Drop] -> []
+
 [v1, v2, Swap] -> [v2, v1]
+
 [v1, v2, Over] -> [v1, v2, v1]
+
 [v1, v2, v3, Rot] -> [v2, v3, v1]
+
 
 **Description:** Generally, Stack manipulation operations are used in Fibonacci and factorial, but it's hard to show how the user just uses Stack maniuplation operations. Thus, we made some sample examples of them to show it works and not work when.
 
