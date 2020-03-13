@@ -183,6 +183,8 @@ How to use: [Value, Dup] -> [Value, Value]
 
 
 ### Strings and operations Example
+How to use: [String1, String2, Add] -> [String1 String2]
+
 **Description:** This example generates clear shows the result of 'IfElse' like "Result: True" or "Result: False" using concatenation of string values. It also works with value with name.
 
 #### Good Examples
@@ -218,6 +220,10 @@ How to use: [Value, Dup] -> [Value, Value]
 
 
 ### List/array data type and operations Example
+How to use: int_list [Integer lists]
+
+list_concatenation [List1] [List2] -> [List1 + List2]
+
 **Description:** This example generates list creation and concatenation after creating two lists uisng 'int_list'.
 
 #### Good Examples
