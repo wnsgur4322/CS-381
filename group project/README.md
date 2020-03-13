@@ -156,26 +156,37 @@ List of Examples
 
 
 ### Strings and operations Example
-**Description:** This example generates 
+**Description:** This example generates clear shows the result of 'IfElse' like "Result: True" or "Result: False" using concatenation of string values. It also works with value with name.
 
 #### Good Examples
-> runProg 
->> Expected output:
+> runProg string_con1
+>> Expected output: Just [MiddleS "3 is bigger than 4? -> Result: False"]
 
-> runProg 
->> Expected output: 
+> runProg string_con2
+>> Expected output: Just [MiddleS "3 is smaller than 4? -> Result: True"]
+
+> runProg string_con3
+>> Expected output: Just [V ("Question",MiddleS "3 is smaller than 4? -> Result: True")]
 
 #### Bad Examples
-> runProg 
->> Expected output: Error
+> runProg bad_string_con1 
+>> bad_string_con1 :: Prog
 
->> Reason:  
+>> bad_string_con1 = [PushS "3 is bigger than 4? -> ", PushS "Result: ", Add, PushN 3, PushN 4, Larger, IfElse [PushB True] [PushB False], Add]
+
+>> Expected output: Nothing
+
+>> Reason:  String operations can't work with other types of value (integers or bool)
 
 
-> runProg 
->> Expected output: Error
+> runProg bad_string_con2 
+>> bad_string_con2 :: Prog
 
->> Reason: 
+>> bad_string_con2 = [PushS "What is 3 + 4? -> ", PushS "Result: ", Add, PushN 3, PushN 4, Add, Add]
+
+>> Expected output: Nothing
+
+>> Reason: String operations can't work with other types of value (integers or bool) 
 
 
 
