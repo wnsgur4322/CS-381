@@ -179,23 +179,40 @@ List of Examples
 
 
 ### Some other feature of your choice Example
-**Description:** This example generates 
+**Description:** Fibonacci and Factorial examples also uses "Bind" with "Ref" to change value with names (By "Let"). In these examples, just to make clear, there are some examples how "Bind" with "Ref" and "Bind without "Ref" work.
 
 #### Good Examples
-> runProg 
->> Expected output:
 
-> runProg 
->> Expected output: 
+> runProg good_bind1
+>> Explanation: This example generate a  = 4; a = 3; through "Bind" without "Ref" how it works.
+
+>> Expected output: Just [V ("a",LeftI 3)]
+
+> runProg good_bind2
+>> Explanation: This example generates a = 4; b = 3; a = b; through "Bind" and "Ref".
+
+>> Expected output: Just [V ("b",LeftI 3),V ("a",LeftI 3)]
 
 #### Bad Examples
-> runProg 
->> Expected output: Error
 
->> Reason:  
+> runProg bad_bind1
+>> Explanation: This example shows error when put String value into Integer value with name like: a = 4; a = "Hi";
+
+>> Expected output: Nothing
+
+>> Reason: After deciding types of value with name, the type cannot be changed. Therefore, it's error.
 
 
-> runProg 
->> Expected output: Error
+> runProg bad_bind2
+>> Explanation: This example shows error when put String value with name into Integer value with name like: a = 4; b = "Hi"; a = b;
 
->> Reason: 
+>> Expected output: Nothing
+
+>> Reason: After deciding types of value with name, the type cannot be changed. Therefore, it's error.
+
+> runProg bad_let
+>> Explanation: This example shows error when make 'Let' with same names ('Let' only permits name that doesn't show up yet).
+
+>> Expected output: Nothing
+
+>> Reason: After a = 4 through 'Let', we can't a = 3 through 'Let', can only using 'Ref' to change value in 'a'
